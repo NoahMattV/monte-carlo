@@ -10,6 +10,7 @@ close all;
 clear;
 numOfParticles = 1001;
 numOfTimeSteps = 1001;
+
 e = 1.602e-19;
 q = e;
 ko = 12.9; % low freq. dielectric const.
@@ -71,7 +72,7 @@ for i = 1:numOfTimeSteps % time-stepping loop
   Py_tot = 0;
   Pz_tot = 0;
   valley_tot = 0;
-  
+
   for j = 1:numOfParticles
       if (tff(j) > deltaT) % no scattering
         tff(j) = tff(j) - deltaT;
@@ -79,6 +80,7 @@ for i = 1:numOfTimeSteps % time-stepping loop
       else % scattering!
         % check for scattering (update Enew)
         % p(new) = p(itime) - eE*tff
+        [Px(j), Py(j), Pz(j)] = getP(Px(j), Py(j), Pz(j), P(j), scatt_mech); % something like this.
         % come back with updated post scattering, P_as, E_as
         tff(j) = getTff(); % get a new tff
       end % if statement
