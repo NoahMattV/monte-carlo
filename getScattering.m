@@ -13,56 +13,139 @@ function [s, v, m] = getScattering(v_in, Ek)
   % from L -> L (final valleys = 3), X (final valleys = 3), Gamma (final valleys = 1)
   % from X -> X (final valleys = 2), L (final valleys = 4), Gamma (final vallyes = 1)
   % Final valleys based on degeneracy. L has 4 points of degeneracy, X has 3, Gamma has 1.
-
+  global G_Tot = zeros(1001);
 
   v = randi([1,3], 1); % generates a random number in the range [1,3] inclusive (1, 2, or 3).
   % modify this to make sense in whatever respect you're using it in.
 
   if (v_in == 0) % Gamma
     s = randi([0,8], 1);
-    % 0 = Acoustic
+    switch s
+      case 0
+        % 0 = Acoustic
+        G_Tot = G;
+      case 1
+        % 1 = Ac + POP abs
+        G_Tot = G + Gpop_abs;
 
-    % 1 = Ac + II
-    % 2 = Ac + II + POP abs
-    % 3 = Ac + II + POP abs + POP em
-    % 4 = Ac + II + POP abs + POP em + Gamma to L abs (L = final valley)
-    % 5 = Ac + II + POP abs + POP em + Gamma to L abs + Gamma to L em (L = final valley)
-    % 6 = Ac + II + POP abs + POP em + Gamma to X abs (X = final valley)
-    % 7 = Ac + II + POP abs + POP em + Gamma to X abs + Gamma to X em (X = final valley)
-    % 8 = Self Scattering! (Do Nothing)
+      case 2
+        % 2 = Ac + POP abs + POP em
+        G_Tot = G + Gpop_abs + Gpop_em;
+
+      case 3
+        % 3 = Ac + POP abs + POP em + Gamma to L abs (L = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_GL;
+      case 4
+        % 4 = Ac + POP abs + POP em + Gamma to L abs + Gamma to L em (L = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_GL + Giv_em_GL;
+
+      case 5
+        % 5 = Ac + POP abs + POP em + Gamma to X abs (X = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_GX;
+
+      case 6
+        % 6 = Ac + POP abs + POP em + Gamma to X abs + Gamma to X em (X = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_GX + Giv_em_GX;
+
+      case 7
+        % 7 = Self Scattering! (Do Nothing)
+
+      otherwise
+        % Self scattering
+    end
 
   else if (v_in == 1) % X
     s = randi([0,10], 1);
     switch s
       case 0
-      % 0 = Acoustic
+        % 0 = Acoustic
+        G_Tot = G;
 
       case 1
-      % 1 = Ac + II
-      % 2 = Ac + II + POP abs
-      % 3 = Ac + II + POP abs + POP em
-      % 4 = Ac + II + POP abs + POP em + X to Gamma abs (Gamma = final valley)
-      % 5 = Ac + II + POP abs + POP em + X to Gamma abs + X to Gamma em (Gamma = final valley)
-      % 6 = Ac + II + POP abs + POP em + X to L abs (L = final valley)
-      % 7 = Ac + II + POP abs + POP em + X to L abs + X to L em (L = final valley)
-      % 8 = Ac + II + POP abs + POP em + X to X abs (X = final valley)
-      % 9 = Ac + II + POP abs + POP em + X to X abs + X to X em (X = final valley)
-      % 10 = Self Scattering! (Do Nothing)
+        % 1 = Ac + POP abs
+        G_Tot = G + Gpop_abs;
+
+      case 2
+        % 2 = Ac + POP abs + POP em
+        G_Tot = G + Gpop_abs + Gpop_em;
+
+      case 3
+        % 3 = Ac + POP abs + POP em + X to Gamma abs (Gamma = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_XG;
+
+      case 4
+        % 4 = Ac + POP abs + POP em + X to Gamma abs + X to Gamma em (Gamma = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_XG + Giv_em_XG;
+
+      case 5
+        % 5 = Ac + POP abs + POP em + X to L abs (L = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_XL;
+
+      case 6
+        % 6 = Ac + POP abs + POP em + X to L abs + X to L em (L = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_XL + Giv_em_XL;
+
+      case 7
+        % 7 = Ac + POP abs + POP em + X to X abs (X = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_XX;
+
+      case 8
+        % 8 = Ac + POP abs + POP em + X to X abs + X to X em (X = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_XX + Giv_em_XX;
+
+      case 9
+        % 9 = Self Scattering! (Do Nothing)
+
+      otherwise
+        % Self Scattering
+    end
 
   else if (v_in == 2) % L
     s = randi([0,10], 1);
+    s = randi([0,10], 1);
+    switch s
+      case 0
+        % 0 = Acoustic
+        G_Tot = G;
+      case 1
+        % 1 = Ac + POP abs
+        G_Tot = G + Gpop_abs;
 
-    % 0 = Acoustic
-    % 1 = Ac + II
-    % 2 = Ac + II + POP abs
-    % 3 = Ac + II + POP abs + POP em
-    % 4 = Ac + II + POP abs + POP em + L to Gamma abs (Gamma = final valley)
-    % 5 = Ac + II + POP abs + POP em + L to Gamma abs + L to Gamma em (Gamma = final valley)
-    % 6 = Ac + II + POP abs + POP em + L to L abs (L = final valley)
-    % 7 = Ac + II + POP abs + POP em + L to L abs + L to L em (L = final valley)
-    % 8 = Ac + II + POP abs + POP em + L to X abs (X = final valley)
-    % 9 = Ac + II + POP abs + POP em + L to X abs + X to X em (X = final valley)
-    % 10 = Self Scattering! (Do Nothing)
+      case 2
+        % 2 = Ac + POP abs + POP em
+        G_Tot = G + Gpop_abs + Gpop_em;
+
+      case 3
+        % 3 = Ac + POP abs + POP em + L to Gamma abs (Gamma = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_LG;
+
+      case 4
+        % 4 = Ac + POP abs + POP em + L to Gamma abs + X to Gamma em (Gamma = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_LG + Giv_em_LG;
+
+      case 5
+        % 5 = Ac + POP abs + POP em + L to L abs (L = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_LL;
+
+      case 6
+        % 6 = Ac + POP abs + POP em + L to L abs + X to L em (L = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_LL + Giv_em_LL;
+
+      case 7
+        % 7 = Ac + POP abs + POP em + L to X abs (X = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_LX;
+
+      case 8
+        % 8 = Ac + POP abs + POP em + L to X abs + X to X em (X = final valley)
+        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_LX + Giv_em_LX;
+
+      case 9
+        % 9 = Self Scattering! (Do Nothing)
+
+      otherwise
+        % Self Scattering
+    end
+
   end
 
 end

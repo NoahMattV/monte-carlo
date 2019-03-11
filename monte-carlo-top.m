@@ -1,7 +1,7 @@
 % ECE 845 Transport in Semiconductor Devices
 % Noah Van Der Weide, 2/27/2019
 %
-% GaAs slab
+% GaAs slab (undoped)
 % Scattering Mechs
 % Acoustic, Ionized impurity, POP, and non-equivalent intervalley (Gamma, L, X)
 
