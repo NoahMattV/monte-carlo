@@ -8,18 +8,18 @@
 
 close all;
 clear;
-numOfParticles = 1001;
-numOfTimeSteps = 1001;
+numOfParticles = 1001; % Number of particles being tested
+numOfTimeSteps = 1001; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
 
-e = 1.602e-19;
-q = e;
-ko = 12.9; % low freq. dielectric const.
-kinf = 10.92; % high freq. dielectric const.
-hbar = 1.054e-34; % Reduced planck's constant (J*s)
-rho = 5360; % density (kg/m^3)
-a = 5.462e-10; % lattice constant (m)
-kT = 0.0259*e; % (J)
-vs = 5240; % Longitudinal acoustic velocity (m/s)
+global e = 1.602e-19; % charge on an electron
+global q = e;
+global ko = 12.9; % low freq. dielectric const.
+global kinf = 10.92; % high freq. dielectric const.
+global hbar = 1.054e-34; % Reduced planck's constant (J*s)
+global rho = 5360; % density (kg/m^3)
+global a = 5.462e-10; % lattice constant (m)
+global kT = 0.0259*e; % (J)
+global vs = 5240; % Longitudinal acoustic velocity (m/s)
 
 % -----------------------
 % Initializing parameters
@@ -28,7 +28,7 @@ E = zeros(numOfParticles);
 Px = zeros(numOfParticles);
 Py = zeros(numOfParticles);
 Pz = zeros(numOfParticles);
-valley = ones(numOfParticles); % 1 = Gamma, 2 = X, 3 = L (all start in Gamma)
+valley = ones(numOfParticles); % 1 = Gamma, 2 = X, 3 = L (all particles start in Gamma)
 tff = zeros(numOfParticles);
 
 E_avg = zeros(numOfParticles);
@@ -37,6 +37,9 @@ Py_avg = zeros(numOfParticles);
 Pz_avg = zeros(numOfParticles);
 valley_avg = zeros(numOfParticles);
 
+% -----------------------
+% Initializations
+% -----------------------
 for i = 1:numOfParticles
   theta = getTheta(); % may have to change this
   phi = getPhi(); % may have to change this
@@ -56,16 +59,14 @@ x2 = (numofTimeSteps - 1) * deltaT + x1;
 timeStep = linspace(x1, x2, numOfTimeSteps);
 
 % -----------------------
-% Generate Scattering Charts (3 charts - 1 for each starting valley)
+% Scattering Charts generated in getScattering.m (3 charts - 1 for each starting valley)
 % Gamma will have 8
 % L and X will have 10
 % -----------------------
 
-
 % -----------------------
 % Loops!
 % -----------------------
-
 for i = 1:numOfTimeSteps % time-stepping loop
   E_tot = 0;
   Px_tot = 0;
@@ -74,22 +75,23 @@ for i = 1:numOfTimeSteps % time-stepping loop
   valley_tot = 0;
 
   for j = 1:numOfParticles
-      if (tff(j) > deltaT) % no scattering
+      if (tff(j) > deltaT) % no scattering before next timestep.
         tff(j) = tff(j) - deltaT;
         %update momentum, p(itime + 1) = p(itime) - eE*deltaT
-      else % scattering!
+
+      else % scattering before next timestep!
         % check for scattering (update Enew)
         % p(new) = p(itime) - eE*tff
         [Px(j), Py(j), Pz(j)] = getP(Px(j), Py(j), Pz(j), P(j), scatt_mech); % something like this.
         % come back with updated post scattering, P_as, E_as
-        tff(j) = getTff(); % get a new tff
+        tff(j) = getTff(); % get a new free-flight time for particle j
       end % if statement
 
-  E_tot = E_tot + E(j);
-  Px_tot = Px_tot + Px(j);
-  Py_tot = Py_tot + Py(j);
-  Pz_tot = Pz_tot + Pz(j);
-  valley_tot = valley_tot + valley(j);
+      E_tot = E_tot + E(j);
+      Px_tot = Px_tot + Px(j);
+      Py_tot = Py_tot + Py(j);
+      Pz_tot = Pz_tot + Pz(j);
+      valley_tot = valley_tot + valley(j);
 
   end % j loop
 
