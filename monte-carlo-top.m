@@ -11,6 +11,15 @@ clear;
 numOfParticles = 1001; % Number of particles being tested
 numOfTimeSteps = 1001; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
 
+global Efield = [0.5 1 2 5 8 10]; % kV/cm Efield(1) = 0.5 ... Efield(6) = 10.
+
+% Depending on the scattering mechanism applied to the electron, a variable can be equated to these
+% This is useful in determining the theta for the angle after scattering
+global AC = 1; % Acoustic
+global POP = 2; % Polar-Optical Phonon (absorption and emission)
+global IV = 3; % Intervalley (absorption and emission)
+global SELF = 4; % Self-Scattering
+
 global e = 1.602e-19; % charge on an electron
 global q = e;
 global ko = 12.9; % low freq. dielectric const.
@@ -73,7 +82,7 @@ for i = 1:numOfTimeSteps % time-stepping loop
   Py_tot = 0;
   Pz_tot = 0;
   valley_tot = 0;
-
+  E_old = 0;
   for j = 1:numOfParticles
       if (tff(j) > deltaT) % no scattering before next timestep.
         tff(j) = tff(j) - deltaT;
@@ -81,10 +90,21 @@ for i = 1:numOfTimeSteps % time-stepping loop
 
       else % scattering before next timestep!
         % check for scattering (update Enew)
+
+        % Update Energy
+        E_old = E(j);
+        E(j) = getEnergy();
+
+
+
+        % Update Momentum
         % p(new) = p(itime) - eE*tff
         [Px(j), Py(j), Pz(j)] = getP(Px(j), Py(j), Pz(j), P(j), scatt_mech); % something like this.
         % come back with updated post scattering, P_as, E_as
+
+        % Update Free-Flight Time
         tff(j) = getTff(); % get a new free-flight time for particle j
+
       end % if statement
 
       E_tot = E_tot + E(j);
