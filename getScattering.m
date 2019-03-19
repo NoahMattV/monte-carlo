@@ -1,14 +1,29 @@
 % given the current valley, both the effective mass and scattering mechanism are
 % determined. The effective mass of the electron is dependent on the final valley
 
-function [s, v, m] = getScattering(v_in, Ek)
+function [s, v, m] = getScattering(v_in, Ek_int)
   % v_in = initial valley
   % Ek = kinetic energy of electron
   % s = scattering mechanism
   % v = final valley
   % m = effective mass after scattering
 
-  % acoustic, ionized impurity, pop absorption, pop emission, intervalley abs, intervalley em
+  % Scattering mechanism is chosen based on the energy of the electron.
+  % The largest energy packet the electron can afford is the scattering mechanism employed.
+  % The closest mechanism just above the electron energy (round up).
+
+  % The new electron energy will most likely not be exactly equal to a discrete
+  % energy in one of the scattering mechanisms, so rounding will have to occur for energy.
+  % Professionals may look to see which step the energy is closest to and round up or down
+  % accordingly, but I'm not getting paid to do this. Because I know how many steps there
+  % are in the scattering mechanisms gammas, the getEnergy() function will assign an
+  % integer in the range of that. To refer to the energy as it's value in Joules, I'll
+  % have two variables for energy -- energy and energyInt. EnergyInt is the value that
+  % relates to the scattering mech, whereas energy is the value converted to Joules,
+  % according to the range used in scattering mechanism calculations
+  % Between 0 and 2*e Joules with 1001 steps.
+
+  % acoustic, pop absorption, pop emission, intervalley abs, intervalley em
   % from Gamma -> L (final valleys = 4), X (final valleys = 3)
   % from L -> L (final valleys = 3), X (final valleys = 3), Gamma (final valleys = 1)
   % from X -> X (final valleys = 2), L (final valleys = 4), Gamma (final vallyes = 1)
