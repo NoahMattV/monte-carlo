@@ -36,10 +36,16 @@ global vs = 5240; % Longitudinal acoustic velocity (m/s)
 % Initializing parameters
 % -----------------------
 E = zeros(numOfParticles);
+Eint = zeros(numOfParticles); % integer value of energy normalized to number of discrete energy steps in scattering mechanism arrays
+eff_m = zeros(numOfParticles); % effective mass
+scatt_mech = zeros(numOfParticles); % latest scattering mech to affect the particle
+valley = ones(numOfParticles); % 1 = Gamma, 2 = X, 3 = L (all particles start in Gamma)
+theta = zeros(numOfParticles);
+phi = zeros(numOfParticles);
 Px = zeros(numOfParticles);
 Py = zeros(numOfParticles);
 Pz = zeros(numOfParticles);
-valley = ones(numOfParticles); % 1 = Gamma, 2 = X, 3 = L (all particles start in Gamma)
+
 tff = zeros(numOfParticles);
 
 E_avg = zeros(numOfParticles);
@@ -57,7 +63,7 @@ genScatt = generateScatt();
 
 for i = 1:numOfParticles
   tff(i) = getTff(); % initial free-flight time for each particle
-  E(i) = getEnergy(); % initial kinetic energy for each particle
+  [E(i), Eint(i)] = getEnergy(); % initial kinetic energy for each particle
   % initialize P
 end
 
@@ -80,6 +86,7 @@ for i = 1:numOfTimeSteps % time-stepping loop
   Pz_tot = 0;
   valley_tot = 0;
   E_old = 0;
+
   for j = 1:numOfParticles
       if (tff(j) > deltaT) % no scattering before next timestep.
         tff(j) = tff(j) - deltaT;
@@ -87,16 +94,16 @@ for i = 1:numOfTimeSteps % time-stepping loop
 
       else % scattering before next timestep!
         % check for scattering (update Enew)
-
-        % Update Energy
         E_old = E(j);
-        E(j) = getEnergy();
+        [scatt_mech(j), eff_m(j), valley(j)] = getScattering(valley(j), Eint(j));
+        E(j) = getEnergy(); % how am I supposed to update energy after scattering?
 
-
+        theta(j) = getTheta(scatt_mech(j), E_old, E(j))
+        phi(j) = getPhi();
 
         % Update Momentum
         % p(new) = p(itime) - eE*tff
-        [Px(j), Py(j), Pz(j)] = getP(Px(j), Py(j), Pz(j), P(j), scatt_mech); % something like this.
+        [Px(j), Py(j), Pz(j)] = getP(Px(j), Py(j), Pz(j), P(j), theta(j), phi(j));
         % come back with updated post scattering, P_as, E_as
 
         % Update Free-Flight Time

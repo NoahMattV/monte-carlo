@@ -197,12 +197,11 @@ function [s, v, m] = getScattering(v_in, E_int)
         v = v_in;
         m = 0.85*m0;
       end
-      
+
     otherwise
       % do nothing;
 
-  end
+  end % case statement
 
 
-
-end
+end % function
