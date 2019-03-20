@@ -31,6 +31,7 @@ global rho = 5360; % density (kg/m^3)
 global a = 5.462e-10; % lattice constant (m)
 global kT = 0.0259*e; % (J)
 global vs = 5240; % Longitudinal acoustic velocity (m/s)
+global hwo = 0.03536*e; % longitudinal optical phonon energy (J)
 
 % -----------------------
 % Initializing parameters
@@ -92,11 +93,12 @@ for i = 1:numOfTimeSteps % time-stepping loop
         tff(j) = tff(j) - deltaT;
         %update momentum, p(itime + 1) = p(itime) - eE*deltaT
 
-      else % scattering before next timestep!
+      else
+        % scattering before next timestep!
         % check for scattering (update Enew)
         E_old = E(j);
         [scatt_mech(j), eff_m(j), valley(j)] = getScattering(valley(j), Eint(j));
-        E(j) = getEnergy(); % how am I supposed to update energy after scattering?
+        [E(j), Eint(j)] = updateEnergy(scatt_mech, E(j));
 
         theta(j) = getTheta(scatt_mech(j), E_old, E(j))
         phi(j) = getPhi();
