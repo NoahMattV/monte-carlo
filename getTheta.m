@@ -8,7 +8,7 @@ function out = getTheta(scatt_mech, E_old, E_new)
   f = 0;
   cos_theta = 0;
 
-  if (scatt_mech == POP)
+  if (scatt_mech == POP_ABS || scatt_mech == POP_EM)
     f = 2*sqrt(E_old*E_new)/((sqrt(E_old) - sqrt(E_new))^2)
     cos_theta = (1 + f - (1 - 2*f)^rtheta)/f;
   end

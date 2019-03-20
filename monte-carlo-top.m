@@ -15,10 +15,12 @@ global Efield = [0.5 1 2 5 8 10]; % kV/cm Efield(1) = 0.5 ... Efield(6) = 10.
 
 % Depending on the scattering mechanism applied to the electron, a variable can be equated to these
 % This is useful in determining the theta for the angle after scattering
-global AC = 1; % Acoustic
-global POP = 2; % Polar-Optical Phonon (absorption and emission)
-global IV = 3; % Intervalley (absorption and emission)
-global SELF = 4; % Self-Scattering
+global AC = 1; % Acoustic (elastic, isotropic)
+global POP_ABS = 2; % Polar-Optical Phonon (inelastic, anisotropic)
+global POP_EM = 3;
+global IV_ABS = 4; % Intervalley (inelastic, isotropic)
+global IV_EM = 5;
+global SELF = 6; % Self-Scattering
 
 global e = 1.602e-19; % charge on an electron
 global q = e;
@@ -49,10 +51,11 @@ valley_avg = zeros(numOfParticles);
 % -----------------------
 % Initializations
 % -----------------------
-for i = 1:numOfParticles
-  theta = getTheta(); % may have to change this
-  phi = getPhi(); % may have to change this
+genScatt = 0;
+genScatt = generateScatt();
 
+
+for i = 1:numOfParticles
   tff(i) = getTff(); % initial free-flight time for each particle
   E(i) = getEnergy(); % initial kinetic energy for each particle
   % initialize P
@@ -66,12 +69,6 @@ x1 = 0;
 x2 = (numofTimeSteps - 1) * deltaT + x1;
 %y = linspace(x1,x2,n) generates n points. The spacing between the points is (x2-x1)/(n-1).
 timeStep = linspace(x1, x2, numOfTimeSteps);
-
-% -----------------------
-% Scattering Charts generated in getScattering.m (3 charts - 1 for each starting valley)
-% Gamma will have 8
-% L and X will have 10
-% -----------------------
 
 % -----------------------
 % Loops!

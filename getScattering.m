@@ -1,166 +1,208 @@
 % given the current valley, both the effective mass and scattering mechanism are
 % determined. The effective mass of the electron is dependent on the final valley
 
-function [s, v, m] = getScattering(v_in, Ek_int)
+function [s, v, m] = getScattering(v_in, E_int)
   % v_in = initial valley
   % Ek = kinetic energy of electron
-  % s = scattering mechanism
-  % v = final valley
+  % s = scattering mechanism (1 = ac, 2 = pop abs, 3 = pop em, 4 = iv abs, 5 = iv em, 6 = self)
+  % v = final valley (1 = Gamma, 2 = X, 3 = L)
   % m = effective mass after scattering
-
-  % Scattering mechanism is chosen based on the energy of the electron.
-  % The largest energy packet the electron can afford is the scattering mechanism employed.
-  % The closest mechanism just above the electron energy (round up).
-
-  % The new electron energy will most likely not be exactly equal to a discrete
-  % energy in one of the scattering mechanisms, so rounding will have to occur for energy.
-  % Professionals may look to see which step the energy is closest to and round up or down
-  % accordingly, but I'm not getting paid to do this. Because I know how many steps there
-  % are in the scattering mechanisms gammas, the getEnergy() function will assign an
-  % integer in the range of that. To refer to the energy as it's value in Joules, I'll
-  % have two variables for energy -- energy and energyInt. EnergyInt is the value that
-  % relates to the scattering mech, whereas energy is the value converted to Joules,
-  % according to the range used in scattering mechanism calculations
-  % Between 0 and 2*e Joules with 1001 steps.
 
   % acoustic, pop absorption, pop emission, intervalley abs, intervalley em
   % from Gamma -> L (final valleys = 4), X (final valleys = 3)
   % from L -> L (final valleys = 3), X (final valleys = 3), Gamma (final valleys = 1)
   % from X -> X (final valleys = 2), L (final valleys = 4), Gamma (final vallyes = 1)
   % Final valleys based on degeneracy. L has 4 points of degeneracy, X has 3, Gamma has 1.
-  global G_Tot = zeros(1001);
 
+  global G_Tot = zeros(1001);
+  m0 = 9.11e-31 %kg
+  rg = 0;
   v = randi([1,3], 1); % generates a random number in the range [1,3] inclusive (1, 2, or 3).
   % modify this to make sense in whatever respect you're using it in.
+  r = rand();
 
-  if (v_in == 0) % Gamma
-    s = randi([0,8], 1);
-    switch s
-      case 0
-        % 0 = Acoustic
-        G_Tot = G;
-      case 1
-        % 1 = Ac + POP abs
-        G_Tot = G + Gpop_abs;
+  switch v_in
+    case 1 % Gamma
+      rg = r*GTot_G_Max;
+      if (rg <= GTot_G(1, E_int))
+        % acoustic (elastic, isotropic)
+        s = 1;
+        v = v_in;
+        m = 0.067*m0;
 
-      case 2
-        % 2 = Ac + POP abs + POP em
-        G_Tot = G + Gpop_abs + Gpop_em;
+      elseif (rg <= GTot_G(2, E_int))
+        % POP abs (inelastic, anisotropic)
+        s = 2;
+        v = v_in;
+        m = 0.067*m0;
 
-      case 3
-        % 3 = Ac + POP abs + POP em + Gamma to L abs (L = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_GL;
-      case 4
-        % 4 = Ac + POP abs + POP em + Gamma to L abs + Gamma to L em (L = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_GL + Giv_em_GL;
+      elseif (rg <= GTot_G(3, E_int))
+        % POP em (inlastic, anisotropic)
+        s = 3;
+        v = v_in;
+        m = 0.067*m0;
 
-      case 5
-        % 5 = Ac + POP abs + POP em + Gamma to X abs (X = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_GX;
+      elseif (rg <= GTot_G(4, E_int))
+        % Intervalley G to L abs (inelastic, isotropic)
+        s = 4;
+        v = 3;
+        m = 0.85*m0; % effective mass of density of states m = (16*ml*mt^2)^(1/3)
 
-      case 6
-        % 6 = Ac + POP abs + POP em + Gamma to X abs + Gamma to X em (X = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_GX + Giv_em_GX;
+      elseif (rg <= GTot_G(5, E_int))
+        % Intervalley G to L em (inelastic, isotropic)
+        s = 5;
+        v = 3;
+        m = 0.85*m0;
 
-      case 7
-        % 7 = Self Scattering! (Do Nothing)
+      elseif (rg <= GTot_G(6, E_int))
+        % Intervalley G to X abs (inelastic, isotropic)
+        s = 4;
+        v = 2;
+        m = 0.85*m0; % effective mass of density of states m = (9*ml*mt^2)^(1/3)
 
-      otherwise
-        % Self scattering
-    end
+      elseif (rg <= GTot_G(7, E_int))
+        % Intervalley G to X em (inelastic, isotropic)
+        s = 5;
+        v = 2;
+        m = 0.85*m0;
 
-  else if (v_in == 1) % X
-    s = randi([0,10], 1);
-    switch s
-      case 0
-        % 0 = Acoustic
-        G_Tot = G;
+      else
+        % Self-scattering -- do nothing
+        s = 6;
+        v = v_in;
+        m = 0.067;
+      end
 
-      case 1
-        % 1 = Ac + POP abs
-        G_Tot = G + Gpop_abs;
+    case 2 % X
+      rg = r*GTot_X_Max;
+      if (rg <= GTot_X(1, E_int))
+        % acoustic (elastic, isotropic)
+        s = 1;
+        v = v_in;
+        m = 0.85*m0;
 
-      case 2
-        % 2 = Ac + POP abs + POP em
-        G_Tot = G + Gpop_abs + Gpop_em;
+      elseif (rg <= GTot_X(2, E_int))
+        % POP abs (inelastic, anisotropic)
+        s = 2;
+        v = v_in;
+        m = 0.85*m0;
 
-      case 3
-        % 3 = Ac + POP abs + POP em + X to Gamma abs (Gamma = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_XG;
+      elseif (rg <= GTot_X(3, E_int))
+        % POP em (inelastic, anisotropic)
+        s = 3;
+        v = v_in;
+        m = 0.85*m0;
 
-      case 4
-        % 4 = Ac + POP abs + POP em + X to Gamma abs + X to Gamma em (Gamma = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_XG + Giv_em_XG;
+      elseif (rg <= GTot_X(4, E_int))
+        % Intervalley X to G abs (inelastic, isotropic)
+        s = 4;
+        v = 1;
+        m = 0.067*m0;
+      elseif (rg <= GTot_X(5, E_int))
+        % Intervalley X to G em (inelastic, isotropic)
+        s = 5;
+        v = 1;
+        m = 0.067*m0;
 
-      case 5
-        % 5 = Ac + POP abs + POP em + X to L abs (L = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_XL;
+      elseif (rg <= GTot_X(6, E_int))
+        % Intervalley X to L abs (inelastic, isotropic)
+        s = 4;
+        v = 3;
+        m = 0.85*m0;
 
-      case 6
-        % 6 = Ac + POP abs + POP em + X to L abs + X to L em (L = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_XL + Giv_em_XL;
+      elseif (rg <= GTot_X(7, E_int))
+        % Intervalley X to L em (inelastic, isotropic)
+        s = 5;
+        v = 3;
+        m = 0.85*m0;
 
-      case 7
-        % 7 = Ac + POP abs + POP em + X to X abs (X = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_XX;
+      elseif (rg <= GTot_X(8, E_int))
+        % Intervalley X to X abs (inelastic, isotropic)
+        s = 4;
+        v = v_in;
+        m = 0.85*m0;
 
-      case 8
-        % 8 = Ac + POP abs + POP em + X to X abs + X to X em (X = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_XX + Giv_em_XX;
+      elseif (rg <= GTot_X(9, E_int))
+        % Intervalley X to X em (inelastic, isotropic)
+        s = 5;
+        v = v_in;
+        m = 0.85*m0;
 
-      case 9
-        % 9 = Self Scattering! (Do Nothing)
+      else
+        % Self-scattering -- do nothing
+        s = 6;
+        v = v_in;
+        m = 0.85*m0;
+      end
 
-      otherwise
-        % Self Scattering
-    end
+    case 3 % L
+      rg = r*GTot_L_Max;
+      if (rg <= GTot_L(1, E_int))
+        % acoustic (elastic, isotropic)
+        s = 1;
+        v = v_in;
+        m = 0.85*m0;
 
-  else if (v_in == 2) % L
-    s = randi([0,10], 1);
-    s = randi([0,10], 1);
-    switch s
-      case 0
-        % 0 = Acoustic
-        G_Tot = G;
-      case 1
-        % 1 = Ac + POP abs
-        G_Tot = G + Gpop_abs;
+      elseif (rg <= GTot_L(2, E_int))
+        % POP abs (inelastic, anisotropic)
+        s = 2;
+        v = v_in;
+        m = 0.85*m0;
 
-      case 2
-        % 2 = Ac + POP abs + POP em
-        G_Tot = G + Gpop_abs + Gpop_em;
+      elseif (rg <= GTot_L(3, E_int))
+        % POP em (inelastic, anisotropic)
+        s = 3;
+        v = v_in;
+        m = 0.85*m0;
 
-      case 3
-        % 3 = Ac + POP abs + POP em + L to Gamma abs (Gamma = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_LG;
+      elseif (rg <= GTot_L(4, E_int))
+        % Intervalley L to G abs (inelastic, isotropic)
+        s = 4;
+        v = 1;
+        m = 0.067*m0;
 
-      case 4
-        % 4 = Ac + POP abs + POP em + L to Gamma abs + X to Gamma em (Gamma = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_LG + Giv_em_LG;
+      elseif (rg <= GTot_L(5, E_int))
+        % Intervalley L to G em (inelastic, isotropic)
+        s = 5;
+        v = 1;
+        m = 0.067*m0;
 
-      case 5
-        % 5 = Ac + POP abs + POP em + L to L abs (L = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_LL;
+      elseif (rg <= GTot_L(6, E_int))
+        % Intervalley L to L abs (inelastic, isotropic)
+        s = 4;
+        v = v_in;
+        m = 0.85*m0;
 
-      case 6
-        % 6 = Ac + POP abs + POP em + L to L abs + X to L em (L = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_LL + Giv_em_LL;
+      elseif (rg <= GTot_L(7, E_int))
+        % Intervalley L to L em (inelastic, isotropic)
+        s = 5;
+        v = v_in;
+        m = 0.85*m0;
 
-      case 7
-        % 7 = Ac + POP abs + POP em + L to X abs (X = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_LX;
+      elseif (rg <= GTot_L(8, E_int))
+        % Intervalley L to X abs (inelastic, isotropic)
+        s = 4;
+        v = 2;
+        m = 0.85*m0;
 
-      case 8
-        % 8 = Ac + POP abs + POP em + L to X abs + X to X em (X = final valley)
-        G_Tot = G + Gpop_abs + Gpop_em + Giv_abs_LX + Giv_em_LX;
+      elseif (rg <= GTot_L(9, E_int))
+        % Intervalley L to X em (inelastic, isotropic)
+        s = 5;
+        v = 2;
+        m = 0.85*m0;
 
-      case 9
-        % 9 = Self Scattering! (Do Nothing)
-
-      otherwise
-        % Self Scattering
-    end
+      else
+        % Self-scattering -- do nothing
+        s = 6;
+        v = v_in;
+        m = 0.85*m0;
+      end
+      
+    otherwise
+      % do nothing;
 
   end
+
+
 
 end
