@@ -175,8 +175,7 @@ for i = 1:numOfTimeSteps % time-stepping loop
         % scattering before next timestep!
         % check for scattering (update Enew)
         E_old = E(j);
-        
-        [scatt_mech(j), valley(j), eff_m(j)] = getScattering(valley(j), Eint(j));
+        [scatt_mech(j,1), valley(j,1), eff_m(j,1)] = getScattering(valley(j,1), Eint(j,1));
         [E(j), Eint(j)] = updateEnergy(scatt_mech(j), E(j));
 
         theta(j) = getTheta(scatt_mech(j), E_old, E(j));
@@ -196,7 +195,7 @@ for i = 1:numOfTimeSteps % time-stepping loop
         tff(j) = getTff(); % get a new free-flight time for particle j
 
       end % if statement
-      
+
       E_tot = E_tot + E(j);
       Px_tot = Px_tot + Px(j);
       Py_tot = Py_tot + Py(j);

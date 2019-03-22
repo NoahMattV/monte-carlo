@@ -1,6 +1,7 @@
 % update energy after scattering based on mechanism
 
 function [E, Eint] = updateEnergy(scatt_mech, E_in)
+  global hwo;
   % what is w in this? I'm pretty sure it has to do with applied E field.
   switch scatt_mech
     case 1 % Acoustic (elastic, isotropic)
