@@ -13,8 +13,8 @@ function [s, v, m] = getScattering(v_in, E_int)
   % from L -> L (final valleys = 3), X (final valleys = 3), Gamma (final valleys = 1)
   % from X -> X (final valleys = 2), L (final valleys = 4), Gamma (final vallyes = 1)
   % Final valleys based on degeneracy. L has 4 points of degeneracy, X has 3, Gamma has 1.
-
-  global G_Tot = zeros(1001);
+  global G_Tot;
+  G_Tot = zeros(1001);
   m0 = 9.11e-31 %kg
   rg = 0;
   v = randi([1,3], 1); % generates a random number in the range [1,3] inclusive (1, 2, or 3).

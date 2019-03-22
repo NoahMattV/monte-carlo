@@ -17,48 +17,48 @@
 % time, <<τm>>. With it, calculate the mobility and conductivity. How does it
 % compare to that obtained using Matthiessen’s rule? How does it compare to
 % experiment/your calculation using Rode’s method?
+function out = scatteringMechs()
 
-close all;
-clear;
-global e = 1.602e-19;
-global q = e;
-global ko = 12.9; % low freq. dielectric const.
-global kinf = 10.92; % high freq. dielectric const.
-global hbar = 1.054e-34; % Reduced planck's constant (J*s)
-global rho = 5360; % density (kg/m^3)
-global a = 5.462e-10; % lattice constant (m)
-global kT = 0.0259*e; % (J)
-global vs = 5240; % Longitudinal acoustic velocity (m/s)
+e = 1.602e-19;
+q = e;
+ko = 12.9; % low freq. dielectric const.
+kinf = 10.92; % high freq. dielectric const.
+hbar = 1.054e-34; % Reduced planck's constant (J*s)
+rho = 5360; % density (kg/m^3)
+a = 5.462e-10; % lattice constant (m)
+kT = 0.0259*e; % (J)
+vs = 5240; % Longitudinal acoustic velocity (m/s)
 
-global wo = (0.03536*e)/hbar; % longitudinal optical phonon energy hbar*wo (J) (hbar already defined, so explicitly defining wo)
-global hwo = 0.03536*e; % longitudinal optical phonon energy (J)
+wo = (0.03536*e)/hbar; % longitudinal optical phonon energy hbar*wo (J) (hbar already defined, so explicitly defining wo)
+hwo = 0.03536*e; % longitudinal optical phonon energy (J)
 
-global No = 1/(exp(hwo/kT) - 1);
-global No1 = No + 1;
+No = 1/(exp(hwo/kT) - 1);
+No1 = No + 1;
 err = 1e-7;
 
-global Dac_G = 7.01*e; % Electron acoustic deformation potential (eV) - Gamma
-global Dac_L = 9.2*e;
-global Dac_X = 9.0*e;
+Dac_G = 7.01*e; % Electron acoustic deformation potential (eV) - Gamma
+Dac_L = 9.2*e;
+Dac_X = 9.0*e;
 
-global mo = 9.11e-31; %kg
-global m = 0.067*mo;
-global Ec = 0;
-global Eg = 1.42*e; % Egap in Joules
+mo = 9.11e-31; %kg
+m = 0.067*mo;
+mdos = m;
+Ec = 0;
+Eg = 1.42*e; % Egap in Joules
 
-global Z = 1;
-global Es = 12.9; % relative dielectric constant
-global Eo = 8.854e-12; %F/m vacuum permittivity
-global Ep = Es*Eo;
+Z = 1;
+Es = 12.9; % relative dielectric constant
+Eo = 8.854e-12; %F/m vacuum permittivity
+Ep = Es*Eo;
 %E = linspace(0,2*e,1001); % 0 to 2*e Joules
 
 % To avoid divide-by-zero issues, the energy is set to a very low value in
 % lieu of 0.
-global E = linspace(1e-255,2*e,1001); % 0 to 2*e Joules
-global Nd = 1e17; % cm^-3
-global Nd = Nd.*1e6; %convert to m^-3
+E = linspace(1e-255,2*e,1001); % 0 to 2*e Joules
+Nd = 1e17; % cm^-3
+Nd = Nd.*1e6; %convert to m^-3
 
-global g = zeros(1001);
+g = zeros(1001);
 num = zeros(1001);
 denom = zeros(1001);
 
@@ -77,11 +77,12 @@ t2 = zeros(1001);
 % i) Acoustic Phonon Scattering - within elastic and equipartition approximations
 % ---------------------------------------------------------------------------------------
 
-global gc3d = zeros(1001);
-global GG = zeros(1001);
-global GL = zeros(1001);
-global GX = zeros(1001);
-global G = zeros(1001);
+gc3d = zeros(1001);
+GG = zeros(1001);
+GL = zeros(1001);
+GX = zeros(1001);
+global G;
+G = zeros(1001);
 
 for i = 1:1001
    %gc3d(i) = 1/(2*pi^2) * (2*mdos/hbar^2)^(3/2) * sqrt(E(i) - Ec); % 3D DOS for GaAs
@@ -129,7 +130,8 @@ end
 Ld = sqrt((Ep*kT)/(e^2 * Nd)); % Debye Length
 
 Gi = zeros(1001);
-global Gmi = zeros(1001); % momentum relaxation rate
+global Gmi; % momentum relaxation rate
+Gmi = zeros(1001);
 
     for i = 1:1001 % energy 0-2 eV
         %Gi(i,j) = (Nd(j) * Z^2 * e^4 * Ld(j)^4 * mdos)/(hbar^3 * pi * Eo^2 * Es^2) * ((k(i))/(4*(k(i))^2*Ld(j)^2 + 1));
@@ -169,12 +171,16 @@ end
 % Strongly inelastic (Ge != 0)
 % Strongly anisotropic (Gm != G)
 
-global Gm_pop_abs = zeros(1001); % momentum relaxation rate
-global Gm_pop_em = zeros(1001);
+global Gm_pop_abs; % momentum relaxation rate
+global Gm_pop_em;
+Gm_pop_abs = zeros(1001); % momentum relaxation rate
+Gm_pop_em = zeros(1001);
 Gm_pop = zeros(1001);
 
-global Gpop_abs = zeros(1001); % scattering rate
-global Gpop_em = zeros(1001);
+global Gpop_abs; % scattering rate
+global Gpop_em;
+Gpop_abs = zeros(1001); % scattering rate
+Gpop_em = zeros(1001);
 Gpop_tot = zeros(1001);
 
 %wo = (0.03536*e)/hbar; % longitudinal optical phonon energy hbar*wo (eV) (hbar already defined, so explicitly defining wo)
@@ -278,51 +284,75 @@ No_XX = 1/(exp(E_XX/kT) - 1);
 % Primitives
 gc3d_abs_GL = zeros(1001);
 gc3d_em_GL = zeros(1001);
-global Giv_abs_GL = zeros(1001);
-global Giv_em_GL = zeros(1001);
-global Giv_GL = zeros(1001);
+global Giv_abs_GL;
+global Giv_em_GL;
+global Giv_GL;
+Giv_abs_GL = zeros(1001);
+Giv_em_GL = zeros(1001);
+Giv_GL = zeros(1001);
 
 gc3d_abs_LG = zeros(1001);
 gc3d_em_LG = zeros(1001);
-global Giv_abs_LG = zeros(1001);
-global Giv_em_LG = zeros(1001);
-global Giv_LG = zeros(1001);
+global Giv_abs_LG;
+global Giv_em_LG;
+global Giv_LG;
+Giv_abs_LG = zeros(1001);
+Giv_em_LG = zeros(1001);
+Giv_LG = zeros(1001);
 
 gc3d_abs_GX = zeros(1001);
 gc3d_em_GX = zeros(1001);
-global Giv_abs_GX = zeros(1001);
-global Giv_em_GX = zeros(1001);
-global Giv_GX = zeros(1001);
+global Giv_abs_GX;
+global Giv_em_GX;
+global Giv_GX;
+Giv_abs_GX = zeros(1001);
+Giv_em_GX = zeros(1001);
+Giv_GX = zeros(1001);
 
 gc3d_abs_XG = zeros(1001);
 gc3d_em_XG = zeros(1001);
-global Giv_abs_XG = zeros(1001);
-global Giv_em_XG = zeros(1001);
-global Giv_XG = zeros(1001);
+global Giv_abs_XG;
+global Giv_em_XG;
+global Giv_XG;
+Giv_abs_XG = zeros(1001);
+Giv_em_XG = zeros(1001);
+Giv_XG = zeros(1001);
 
 gc3d_abs_LL = zeros(1001);
 gc3d_em_LL = zeros(1001);
-global Giv_abs_LL = zeros(1001);
-global Giv_em_LL = zeros(1001);
-global Giv_LL = zeros(1001);
+global Giv_abs_LL;
+global Giv_em_LL;
+global Giv_LL;
+Giv_abs_LL = zeros(1001);
+Giv_em_LL = zeros(1001);
+Giv_LL = zeros(1001);
 
 gc3d_abs_LX = zeros(1001);
 gc3d_em_LX = zeros(1001);
-global Giv_abs_LX = zeros(1001);
-global Giv_em_LX = zeros(1001);
-global Giv_LX = zeros(1001);
+global Giv_abs_LX;
+global Giv_em_LX;
+global Giv_LX;
+Giv_abs_LX = zeros(1001);
+Giv_em_LX = zeros(1001);
+Giv_LX = zeros(1001);
 
 gc3d_abs_XL = zeros(1001);
 gc3d_em_XL = zeros(1001);
-global Giv_abs_XL = zeros(1001);
-global Giv_em_XL = zeros(1001);
-global Giv_XL = zeros(1001);
+global Giv_abs_XL;
+global Giv_em_XL;
+global Giv_XL;
+Giv_abs_XL = zeros(1001);
+Giv_em_XL = zeros(1001);
+Giv_XL = zeros(1001);
 
 gc3d_abs_XX = zeros(1001);
 gc3d_em_XX = zeros(1001);
-global Giv_abs_XX = zeros(1001);
-global Giv_em_XX = zeros(1001);
-global Giv_XX = zeros(1001);
+global Giv_abs_XX;
+global Giv_em_XX;
+global Giv_XX;
+Giv_abs_XX = zeros(1001);
+Giv_em_XX = zeros(1001);
+Giv_XX = zeros(1001);
 
 for i = 1:1001
    gc3d_abs_GL(i) = 1/(2*pi^2) * (2*mdos/hbar^2)^(3/2) * real(sqrt(E(i) + E_GL - delta_E_LG));
@@ -408,4 +438,8 @@ for i = 1:1001
   T(i) = num(i)/denom(i); %<<Tau>>
   %mobility = e*<<T>>/m* (where m* is the effective conductivity mass -
   mu(i) = (q*T(i)/m);
+end
+
+out = 1;
+
 end
