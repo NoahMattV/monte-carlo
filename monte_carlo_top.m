@@ -66,7 +66,7 @@ phi = zeros(numOfParticles,1);
 Px = zeros(numOfParticles,1);
 Py = zeros(numOfParticles,1);
 Pz = zeros(numOfParticles,1);
-
+P = zeros(numOfParticles,1);
 tff = zeros(numOfParticles,1);
 
 E_avg = zeros(numOfParticles,1);
@@ -85,20 +85,22 @@ theta_i = 0;
 phi_i = 0;
 
 for i = 1:numOfParticles
+  eff_m(i,1) = 0.067;
   tff(i,1) = getTff(); % initial free-flight time for each particle
   [E(i,1), Eint(i,1)] = getEnergy(); % initial kinetic energy for each particle
   % initialize P
   theta_i = getTheta(0,0,0);
   phi_i = getPhi();
-  Px(i,1) = sin(theta_i)*cos(phi_i);
-  
+  P(i,1) = sqrt(2*eff_m*E(i,1));
+  Px(i,1) = P(i,1)*sin(theta_i)*cos(phi_i);
+
   theta_i = getTheta(0,0,0);
   phi_i = getPhi();
-  Py(i,1) = sin(theta_i)*sin(phi_i);
-  
+  Py(i,1) = P(i,1)*sin(theta_i)*sin(phi_i);
+
   theta_i = getTheta(0,0,0);
   phi_i = getPhi();
-  Pz(i,1) = cos(theta_i);
+  Pz(i,1) = P(i,1)*cos(theta_i);
 end
 
 figure();
@@ -131,7 +133,7 @@ histogram(tff);
 title('tff hist');
 hold off;
 
-%{
+
 
 % -----------------------
 % Generate time frame
@@ -153,7 +155,7 @@ for i = 1:numOfTimeSteps % time-stepping loop
   valley_tot = 0;
   E_old = 0;
 
-  for j = 1:numOfParticles
+  for j = 1:(numOfParticles)
       if (tff(j) > deltaT) % no scattering before next timestep.
         tff(j) = tff(j) - deltaT;
         %update momentum, p(itime + 1) = p(itime) - eE*deltaT
@@ -165,12 +167,16 @@ for i = 1:numOfTimeSteps % time-stepping loop
         [scatt_mech(j), eff_m(j), valley(j)] = getScattering(valley(j), Eint(j));
         [E(j), Eint(j)] = updateEnergy(scatt_mech, E(j));
 
-        theta(j) = getTheta(scatt_mech(j), E_old, E(j))
+        theta(j) = getTheta(scatt_mech(j), E_old, E(j));
         phi(j) = getPhi();
 
         % Update Momentum
         % p(new) = p(itime) - eE*tff
+        P(j) = P(j) - e*Efield*tff(j);
         [Px(j), Py(j), Pz(j)] = getP(Px(j), Py(j), Pz(j), P(j), theta(j), phi(j));
+        Px(j) = P(j)*Px(j);
+        Py(j) = P(j)*Py(j);
+        Pz(j) = P(j)*Pz(j);
         % come back with updated post scattering, P_as, E_as
 
         % Update Free-Flight Time
@@ -194,4 +200,32 @@ for i = 1:numOfTimeSteps % time-stepping loop
   valley_avg(i) = valley_tot/numOfParticles;
 end % i loop
 
-%}
+figure();
+hold on;
+histogram(valley);
+title('Valley Occupation');
+hold off;
+
+figure();
+hold on;
+plot(E_avg);
+title('Ek Avg');
+hold off;
+
+figure();
+hold on;
+plot(Px_avg);
+title('Px Avg');
+hold off;
+
+figure();
+hold on;
+plot(Py_avg);
+title('Py Avg');
+hold off;
+
+figure();
+hold on;
+plot(Pz_avg);
+title('Pz Avg');
+hold off;
