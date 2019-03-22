@@ -8,7 +8,6 @@
 clc;
 close all;
 clear;
-format long;
 numOfParticles = 1001; % Number of particles being tested
 numOfTimeSteps = 1001; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
 
@@ -78,6 +77,8 @@ valley_avg = zeros(numOfParticles,1);
 % -----------------------
 % Initializations
 % -----------------------
+genScatt = 0;
+genScatt1 = 0;
 genScatt1 = scatteringMechs();
 genScatt = generateScatt();
 
@@ -90,46 +91,28 @@ for i = 1:numOfParticles
   % initialize P
   theta_i = getTheta(0,0,0);
   phi_i = getPhi();
+
   Px(i,1) = sin(theta_i)*cos(phi_i);
-  
-  theta_i = getTheta(0,0,0);
-  phi_i = getPhi();
   Py(i,1) = sin(theta_i)*sin(phi_i);
-  
-  theta_i = getTheta(0,0,0);
-  phi_i = getPhi();
   Pz(i,1) = cos(theta_i);
 end
 
 figure();
 hold on;
 histogram(real(Px));
-title('px hist');
-hold off;
-
+label('px hist');
 figure();
-hold on;
 histogram(real(Py));
-title('py hist');
-hold off;
-
+label('py hist');
 figure();
-hold on;
 histogram(real(Pz));
-title('pz hist');
-hold off;
-
+label('pz hist');
 figure();
-hold on;
 histogram(E);
-title('E hist');
-hold off;
-
+label('E hist');
 figure();
-hold on;
 histogram(tff);
-title('tff hist');
-hold off;
+label('tff hist');
 
 %{
 
