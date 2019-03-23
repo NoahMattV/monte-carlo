@@ -6,5 +6,5 @@ function [energy, energyInt] = getEnergy()
   global kT;
   re = 2*e*rand; % choose a number between 0 and 2*e
   energy = -(3/2)*kT*log(re); % what to do with the -(3/2)*kT for the energyInt?
-  energyInt = ceil(1001*energy); % integer value for energy to relate to arrays of scattering mechs.
+  energyInt = ceil(1001*(energy/(2*e))); % integer value for energy to relate to arrays of scattering mechs.
 end

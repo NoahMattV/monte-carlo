@@ -2,6 +2,7 @@
 
 function [E, Eint] = updateEnergy(scatt_mech, E_in)
   global hwo;
+  global e;
   % what is w in this? I'm pretty sure it has to do with applied E field.
   switch scatt_mech
     case 1 % Acoustic (elastic, isotropic)
@@ -20,6 +21,6 @@ function [E, Eint] = updateEnergy(scatt_mech, E_in)
       % do nothing
   end %switch case
 
-  Eint = ceil(1001*E);
+  Eint = ceil(1001*(E/(2*e)));
 
 end % function
