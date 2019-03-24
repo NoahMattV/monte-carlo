@@ -10,11 +10,11 @@ close all;
 clear;
 format long;
 numOfParticles = 1001; % Number of particles being tested
-numOfTimeSteps = 101; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
+numOfTimeSteps = 1001; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
 
 %global Efield;
 %Efield = [0.5 1 2 5 8 10]; % kV/cm Efield(1) = 0.5 ... Efield(6) = 10.
-Efield = 0.5;
+Efield = 5;
 % Depending on the scattering mechanism applied to the electron, a variable can be equated to these
 % This is useful in determining the theta for the angle after scattering
 global AC; % Acoustic (elastic, isotropic)
