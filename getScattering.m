@@ -29,10 +29,13 @@ function [s, v, m] = getScattering(v_in, E_int)
   %v = randi([1,3], 1); % generates a random number in the range [1,3] inclusive (1, 2, or 3).
   % modify this to make sense in whatever respect you're using it in.
   r = rand();
+  
 
   switch v_in
     case 1 % Gamma
-      rg = r*MaxG;
+      st = linspace(1, MaxG, 1001);
+      rg = st(1,ceil(r*1001));
+      %rg = r*MaxG;
       if (rg <= GTot_G(1, E_int))
         % acoustic (elastic, isotropic)
         s = 1;
@@ -83,7 +86,9 @@ function [s, v, m] = getScattering(v_in, E_int)
       end
 
     case 2 % X
-      rg = r*MaxX;
+      st = linspace(1, MaxX, 1001);
+      rg = st(1,ceil(r*1001));
+      %rg = r*MaxX;
       if (rg <= GTot_X(1, E_int))
         % acoustic (elastic, isotropic)
         s = 1;
@@ -145,7 +150,9 @@ function [s, v, m] = getScattering(v_in, E_int)
       end
 
     case 3 % L
-      rg = r*MaxL;
+      st = linspace(1, MaxL, 1001);
+      rg = st(1,ceil(r*1001));
+      %rg = r*MaxL;
       if (rg <= GTot_L(1, E_int))
         % acoustic (elastic, isotropic)
         s = 1;
