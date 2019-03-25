@@ -70,11 +70,20 @@ P = zeros(numOfTimeSteps, numOfParticles);
 
 tff = zeros(1,numOfParticles);
 
+
 E_avg = zeros(numOfTimeSteps,1);
+E_avg_G = zeros(numOfTimeSteps,1)
+E_avg_X = zeros(numOfTimeSteps,1);
+E_avg_L = zeros(numOfTimeSteps,1);
 Px_avg = zeros(numOfTimeSteps,1);
 Py_avg = zeros(numOfTimeSteps,1);
 Pz_avg = zeros(numOfTimeSteps,1);
 valley_avg = zeros(numOfTimeSteps,1);
+v_avg = zeros(numOfTimeSteps,1);
+
+eff_m_avg = zeros(numOfTimeSteps,1);
+vx_avg = zeros(numOfTimeSteps,1); % for the x and y components when E field is 5 kV/cm
+vy_avg = zeros(numOfTimeSteps,1);
 
 % -----------------------
 % Initializations
@@ -137,6 +146,9 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   clc;
   fprintf('%d/%d\n',i,numOfTimeSteps);
   E_tot = 0;
+  E_tot_G = 0;
+  E_tot_X = 0;
+  E_tot_L = 0;
   Px_tot = 0;
   Py_tot = 0;
   Pz_tot = 0;
@@ -180,42 +192,100 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
 
       end % if statement
 
+      switch valley(i,j)
+        case 1
+          E_tot_G = E_tot_G + E(i,j);
+        case 2
+          E_tot_X = E_tot_X + E(i,j);
+        case 3
+          E_tot_L = E_tot_L + E(i,j);
+        otherwise
+          disp('E_tot Error');
+      end
+
       E_tot = E_tot + E(i,j);
       Px_tot = Px_tot + Px(i,j);
       Py_tot = Py_tot + Py(i,j);
       Pz_tot = Pz_tot + Pz(i,j);
       valley_tot = valley_tot + valley(i,j);
+      eff_m_tot = eff_m_tot + eff_m(i,j);
 
   end % j loop
 
   % get average E, Px, Py, Pz, and valley occupation(add up and divide by numOfParticles)
+  particlesInG = sum(valley(i,:) == 1);
+  particlesInX = sum(valley(i,:) == 2);
+  particlesInL = sum(valley(i,:) == 3);
+
   E_avg(i,1) = E_tot/numOfParticles;
+  E_avg_G(i,1) = E_tot_G/particlesInG;
+  E_avg_X(i,1) = E_tot_X/particlesInX;
+  E_avg_L(i,1) = E_tot_L/particlesInL;
+
   Px_avg(i,1) = Px_tot/numOfParticles;
   Py_avg(i,1) = Py_tot/numOfParticles;
   Pz_avg(i,1) = Pz_tot/numOfParticles;
   valley_avg(i,1) = valley_tot/numOfParticles;
+
+  v_avg(i+1,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
+
+  eff_m_avg(i,1) = eff_m_tot/numOfParticles;
+  vx_avg(i,1) = Px_avg(i,1)/eff_m_avg(i,1);
+  vy_avg(i,1) = Px_avg(i,1)/eff_m_avg(i,1);
+
 end % i loop
+
 
 % -----------------------
 % 2) Plot the time evolution of:
 %    a) The average electron velocity along the field direction
 %    b) Average electron kinetic energy (for each valley as well as the ensemble as a whole)
 %    c) Population of each valley for the uniform electric field of 0.5, 1, 2, 5, 8, and 10 kV/cm
-%       i) For the electric field of 5 kV/cm, plot the evolution of the x and y components of the electron
+%    d) For the electric field of 5 kV/cm, plot the evolution of the x and y components of the electron
 %          velocity as well.
 % -----------------------
 
+% <v> = - deltaEk/(e*Efield*tff)
+
+% a) The average electron velocity along the field direction
 figure();
 hold on;
-histogram(valley);
-title('Valley Occupation');
+plot(timeStep,v_avg(:,1));
+title('Average velocity over time for %d kV//cm', Efield);
 hold off;
 
+% b) Average electron kinetic energy (for each valley as well as the ensemble as a whole)
 figure();
 hold on;
 plot(timeStep,E_avg);
-title('Ek Avg');
+title('Average Ek over time for %d kV//cm', Efield);
+plot(timeStep,E_avg_G);
+plot(timeStep,E_avg_X);
+plot(timeStep,E_avg_L);
+legend('Total Ek', '/G', 'X', 'L');
 hold off;
+
+% c) Population of each valley for the uniform electric field of 0.5, 1, 2, 5, 8, and 10 kV/cm
+figure();
+hold on;
+histogram(valley);
+title('Valley Occupation at %d kV//cm', Efield);
+hold off;
+
+% d) For the electric field of 5 kV/cm, plot the evolution of the x and y
+%    components of the electron velocity as well.
+if (Efield == 5)
+  figure();
+  hold on;
+  plot(timeStep,vx_avg(:,1));
+  plot(timestep,vy_avg(:,1));
+  title('X and Y components of avg velocity for %d kV//cm', Efield);
+  legend('v_x', 'v_y');
+  hold off;
+end
+
+
+
 
 figure();
 hold on;
