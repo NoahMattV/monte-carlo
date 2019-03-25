@@ -11,7 +11,7 @@ clear;
 format long;
 numOfParticles = 1001; % Number of particles being tested
 numOfTimeSteps = 1001; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
-
+deltaT = 10e-14; % 10 fs for now. Shoot for between 1-10 fs.
 %global Efield;
 %Efield = [0.5 1 2 5 8 10]; % kV/cm Efield(1) = 0.5 ... Efield(6) = 10.
 Efield = 5;
@@ -61,6 +61,7 @@ Eint = ones(numOfTimeSteps, numOfParticles); % integer value of energy normalize
 eff_m = zeros(numOfTimeSteps, numOfParticles); % effective mass
 scatt_mech = zeros(numOfTimeSteps, numOfParticles); % latest scattering mech to affect the particle
 valley = ones(numOfTimeSteps, numOfParticles); % 1 = Gamma, 2 = X, 3 = L (all particles start in Gamma)
+
 theta = zeros(numOfTimeSteps, numOfParticles);
 phi = zeros(numOfTimeSteps, numOfParticles);
 Px = zeros(numOfTimeSteps, numOfParticles);
@@ -70,6 +71,9 @@ P = zeros(numOfTimeSteps, numOfParticles);
 
 tff = zeros(1,numOfParticles);
 
+valley_G = zeros(numOfTimeSteps, 1);
+valley_X = zeros(numOfTimeSteps, 1);
+valley_L = zeros(numOfTimeSteps, 1);
 
 E_avg = zeros(numOfTimeSteps,1);
 E_avg_G = zeros(numOfTimeSteps,1)
@@ -115,25 +119,24 @@ end
 
 % -----------------------
 % 1) Plot a histogram of the initial energy distribution and the initial momentum
-%    along the z-axis. Assume all electrons start in the Γ valley.
+%    along the z-axis. Assume all electrons start in the Gamma valley.
 % -----------------------
 
 figure();
 hold on;
-histogram(real(Pz));
+histogram(abs(Pz(1,:)));
 title('Initial Pz');
 hold off;
 
 figure();
 hold on;
-histogram(E);
+histogram(E(1,:));
 title('Initial Energy');
 hold off;
 
 % -----------------------
 % Generate time frame
 % -----------------------
-deltaT = 10e-14; % 10 fs for now. Shoot for between 1-10 fs.
 x1 = 0;
 x2 = (numOfTimeSteps - 1) * deltaT + x1;
 %y = linspace(x1,x2,n) generates n points. The spacing between the points is (x2-x1)/(n-1).
@@ -154,6 +157,7 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   Pz_tot = 0;
   valley_tot = 0;
   E_old = 0;
+  eff_m_tot = 0;
 
   for j = 1:(numOfParticles)
       if (tff(1,j) > deltaT) % no scattering before next timestep.
@@ -171,7 +175,7 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
         % check for scattering (update Enew)
         %E_old = E(i,j);
 
-        [scatt_mech(i,j), valley(i,j), eff_m(i,j)] = getScattering(valley(i,j), Eint(i,j));
+        [scatt_mech(i,j), valley(i+1,j), eff_m(i+1,j)] = getScattering(valley(i,j), Eint(i,j));
         [E(i+1,j), Eint(i+1,j)] = updateEnergy(scatt_mech(i,j), E(i,j));
 
         theta(i,j) = getTheta(scatt_mech(i,j), E(i,j), E(i+1,j));
@@ -213,14 +217,14 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   end % j loop
 
   % get average E, Px, Py, Pz, and valley occupation(add up and divide by numOfParticles)
-  particlesInG = sum(valley(i,:) == 1);
-  particlesInX = sum(valley(i,:) == 2);
-  particlesInL = sum(valley(i,:) == 3);
+  valley_G(i,1) = sum(valley(i,:) == 1);
+  valley_X(i,1) = sum(valley(i,:) == 2);
+  valley_L(i,1) = sum(valley(i,:) == 3);
 
   E_avg(i,1) = E_tot/numOfParticles;
-  E_avg_G(i,1) = E_tot_G/particlesInG;
-  E_avg_X(i,1) = E_tot_X/particlesInX;
-  E_avg_L(i,1) = E_tot_L/particlesInL;
+  E_avg_G(i,1) = E_tot_G/valley_G(i,1);
+  E_avg_X(i,1) = E_tot_X/valley_X(i,1);
+  E_avg_L(i,1) = E_tot_L/valley_L(i,1);
 
   Px_avg(i,1) = Px_tot/numOfParticles;
   Py_avg(i,1) = Py_tot/numOfParticles;
@@ -230,11 +234,22 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   v_avg(i+1,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
 
   eff_m_avg(i,1) = eff_m_tot/numOfParticles;
-  vx_avg(i,1) = Px_avg(i,1)/eff_m_avg(i,1);
-  vy_avg(i,1) = Px_avg(i,1)/eff_m_avg(i,1);
+  vx_avg(i,1) = abs(Px_avg(i,1)/eff_m_avg(i,1));
+  vy_avg(i,1) = abs(Py_avg(i,1)/eff_m_avg(i,1));
 
 end % i loop
 
+% Last value isn't calculated, so to make it easier on myself, I'm just setting
+% them to NaN
+valley_G(numOfTimeSteps,1) = NaN;
+valley_X(numOfTimeSteps,1) = NaN;
+valley_L(numOfTimeSteps,1) = NaN;
+E_avg(numOfTimeSteps,1) = NaN;
+E_avg_G(numOfTimeSteps,1) = NaN;
+E_avg_X(numOfTimeSteps,1) = NaN;
+E_avg_L(numOfTimeSteps,1) = NaN;
+vx_avg(numOfTimeSteps,1) = NaN;
+vy_avg(numOfTimeSteps,1) = NaN;
 
 % -----------------------
 % 2) Plot the time evolution of:
@@ -251,42 +266,63 @@ end % i loop
 figure();
 hold on;
 plot(timeStep,v_avg(:,1));
-title('Average velocity over time for %d kV//cm', Efield);
+title('Average Velocity Over Time');
+xlabel('Time (s)');
+ylabel('Velocity (cm/s)');
 hold off;
 
 % b) Average electron kinetic energy (for each valley as well as the ensemble as a whole)
 figure();
 hold on;
 plot(timeStep,E_avg);
-title('Average Ek over time for %d kV//cm', Efield);
+title('Average Ek Over Time');
 plot(timeStep,E_avg_G);
 plot(timeStep,E_avg_X);
 plot(timeStep,E_avg_L);
-legend('Total Ek', '/G', 'X', 'L');
+legend('Total Avg Ek', '\Gamma', 'X', 'L');
+xlabel('Time (s)');
+ylabel('E_k (J)');
 hold off;
 
 % c) Population of each valley for the uniform electric field of 0.5, 1, 2, 5, 8, and 10 kV/cm
+
+figure();
+hold on;
+plot(timeStep,valley_G(:,1));
+title('Valley Occupation Over Time')
+plot(timeStep,valley_X(:,1));
+plot(timeStep,valley_L(:,1));
+legend('\Gamma', 'X', 'L');
+xlabel('Time (s)');
+ylabel('Number of Particles');
+hold off;
+
+%{
 figure();
 hold on;
 histogram(valley);
-title('Valley Occupation at %d kV//cm', Efield);
+title('Valley Occupation at end');
 hold off;
+%}
 
 % d) For the electric field of 5 kV/cm, plot the evolution of the x and y
 %    components of the electron velocity as well.
+
 if (Efield == 5)
   figure();
   hold on;
   plot(timeStep,vx_avg(:,1));
-  plot(timestep,vy_avg(:,1));
-  title('X and Y components of avg velocity for %d kV//cm', Efield);
+  plot(timeStep,vy_avg(:,1));
+  title('X and Y Components of Avg Velocity');
   legend('v_x', 'v_y');
+  xlabel('Time (s)');
+  ylabel('Velocity (cm/s)');
   hold off;
 end
 
 
 
-
+%{
 figure();
 hold on;
 plot(timeStep,abs(Px_avg));
@@ -304,6 +340,7 @@ hold on;
 plot(timeStep,abs(Pz_avg));
 title('Pz Avg');
 hold off;
+%}
 
 % ---------------------------
 % 3) From the time evolution of the drift velocity, kinetic energy in each valley, and valley
