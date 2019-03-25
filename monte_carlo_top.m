@@ -104,44 +104,22 @@ for j = 1:numOfParticles
   Pz(1,j) = P(1,j)*cos(theta_i);
 end
 
-%{
-figure();
-hold on;
-histogram(real(Px));
-title('px hist');
-hold off;
-
-figure();
-hold on;
-histogram(real(Py));
-title('py hist');
-hold off;
+% -----------------------
+% 1) Plot a histogram of the initial energy distribution and the initial momentum
+%    along the z-axis. Assume all electrons start in the Γ valley.
+% -----------------------
 
 figure();
 hold on;
 histogram(real(Pz));
-title('pz hist');
+title('Initial Pz');
 hold off;
 
 figure();
 hold on;
 histogram(E);
-title('E hist');
+title('Initial Energy');
 hold off;
-
-figure();
-hold on;
-histogram(tff);
-title('tff hist');
-hold off;
-
-figure();
-hold on;
-histogram(valley);
-title('Initial Valley Occupation');
-hold off;
-
-%}
 
 % -----------------------
 % Generate time frame
@@ -155,7 +133,7 @@ timeStep = linspace(x1, x2, numOfTimeSteps);
 % -----------------------
 % Loops!
 % -----------------------
-for i = 1:(numOfTimeSteps-1) % time-stepping loop 
+for i = 1:(numOfTimeSteps-1) % time-stepping loop
   clc;
   fprintf('%d/%d\n',i,numOfTimeSteps);
   E_tot = 0;
@@ -218,6 +196,15 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   valley_avg(i,1) = valley_tot/numOfParticles;
 end % i loop
 
+% -----------------------
+% 2) Plot the time evolution of:
+%    a) The average electron velocity along the field direction
+%    b) Average electron kinetic energy (for each valley as well as the ensemble as a whole)
+%    c) Population of each valley for the uniform electric field of 0.5, 1, 2, 5, 8, and 10 kV/cm
+%       i) For the electric field of 5 kV/cm, plot the evolution of the x and y components of the electron
+%          velocity as well.
+% -----------------------
+
 figure();
 hold on;
 histogram(valley);
@@ -247,3 +234,35 @@ hold on;
 plot(timeStep,abs(Pz_avg));
 title('Pz Avg');
 hold off;
+
+% ---------------------------
+% 3) From the time evolution of the drift velocity, kinetic energy in each valley, and valley
+%    population, extract characteristic times for the approach of each of these quantities to the
+%    steady state (in other words, fit the part of the curve describing approach to the steady state
+%    with an exp(− t /exp τ), with τ as the fitting parameter). Plot each of these characteristic times
+%    τ as a function of the electric field for the field values as above (0.5, 1, 2, 5, 8, and 10
+%    kV/cm). How do the obtained relaxation times for the drift velocity and kinetic energy
+%    compare to the appropriate <<τ>>’s, that is, <<τm>> and <<τE>>, respectively?
+% ---------------------------
+
+
+
+
+% ---------------------------
+% 4) Plot the steady state results for the drift velocity, average electron energy, and the valley
+%    population versus the electric field. Vary the field from 0.1 to 10 kV/cm. Extract the value of
+%    the low-field mobility for GaAs, and compare with the value found in textbooks (give
+%    reference). In your steady state calculations, make sure that all transients have died out before
+%    extracting the steady state velocity (this will usually happen after ten or a few tens of
+%    picoseconds). In order to combat noise when extracting the steady-state quantities, average
+%    each quantity of interest over a few picoseconds once you are comfortably in the steady state.
+% ---------------------------
+
+
+
+
+
+
+
+
+% End of function
