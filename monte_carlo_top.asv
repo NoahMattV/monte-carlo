@@ -121,10 +121,11 @@ end
 % 1) Plot a histogram of the initial energy distribution and the initial momentum
 %    along the z-axis. Assume all electrons start in the Gamma valley.
 % -----------------------
-
+histoP = sort(Pz(:,:));
 figure();
 hold on;
-histogram(abs(Pz(1,:)));
+%histogram(abs(Pz(1,:)));
+histogram(abs(histoP),100);
 title('Initial Pz');
 hold off;
 
