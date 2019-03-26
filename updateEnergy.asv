@@ -1,24 +1,29 @@
 % update energy after scattering based on mechanism
 
-function [energy, energyInt] = updateEnergy(scatt_mech, E_in, old_valley, new_valley)
+function [energy, energyInt] = updateEnergy(scatt_mech, E_in)
   global hwo;
   global e;
-  Ec = [1.42*e 1.90*e 1.71*e]; % minimum energy in Gamma, X, L
   E = linspace(1e-255,2*e,1001); % 0 to 2*e Joules
   % what is w in this? I'm pretty sure it has to do with applied E field.
   switch scatt_mech
     case 1 % Acoustic (elastic, isotropic)
-        energy = E_in;
+      energy = E_in;
     case 2 % POP Abs (inelastic, anisotropic)
-        energy = E_in + hwo;
+      energy = E_in + hwo;
     case 3 % POP Em
-        energy = E_in - hwo;
-    case 4 % IV Abs (inelastic, isotropic) 
-        energy = E_in + hwo + Ec(old_valley) - Ec(new_valley);
-    case 5 % IV Em
-        energy = E_in - hwo + Ec(old_valley) - Ec(new_valley);
+      energy = E_in - hwo;
+    case 4 % IV G to X Abs (inelastic, isotropic) 
+      energy = E_in + hwo;
+    case 5 % IV G to X Em
+      energy = E_in - hwo;
+    case 6 
+      case 7
+      case 8
+      case 9
+      case 10
+      case 11
     case 6 % self
-        energy = E_in;
+      energy = E_in;
     otherwise
       % do nothing
   end %switch case

@@ -4,13 +4,13 @@
 % GaAs slab (undoped)
 % Scattering Mechs
 % Acoustic, Ionized impurity, POP, and non-equivalent intervalley (Gamma, L, X)
-
+% Efield is applied along z-direction
 clc;
 close all;
 clear;
-format long;
-numOfParticles = 1001; % Number of particles being tested
-numOfTimeSteps = 1001; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
+%format long;
+numOfParticles = 101; % Number of particles being tested
+numOfTimeSteps = 101; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
 deltaT = 10e-14; % 10 fs for now. Shoot for between 1-10 fs.
 %global Efield;
 %Efield = [0.5 1 2 5 8 10]; % kV/cm Efield(1) = 0.5 ... Efield(6) = 10.
@@ -52,7 +52,7 @@ a = 5.462e-10; % lattice constant (m)
 kT = 0.0259*e; % (J)
 vs = 5240; % Longitudinal acoustic velocity (m/s)
 hwo = 0.03536*e; % longitudinal optical phonon energy (J)
-
+m0 = 9.11e-31; % kg
 % -----------------------
 % Initializing parameters
 % -----------------------
@@ -76,7 +76,7 @@ valley_X = zeros(numOfTimeSteps, 1);
 valley_L = zeros(numOfTimeSteps, 1);
 
 E_avg = zeros(numOfTimeSteps,1);
-E_avg_G = zeros(numOfTimeSteps,1)
+E_avg_G = zeros(numOfTimeSteps,1);
 E_avg_X = zeros(numOfTimeSteps,1);
 E_avg_L = zeros(numOfTimeSteps,1);
 Px_avg = zeros(numOfTimeSteps,1);
@@ -99,7 +99,7 @@ theta_i = 0;
 phi_i = 0;
 
 for j = 1:numOfParticles
-  eff_m(1,j) = 0.067;
+  eff_m(1,j) = 0.067*m0;
   tff(1,j) = getTff(); % initial free-flight time for each particle
   [E(1,j), Eint(1,j)] = getEnergy(); % initial kinetic energy for each particle
   % initialize P
@@ -176,7 +176,7 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
         %E_old = E(i,j);
 
         [scatt_mech(i,j), valley(i+1,j), eff_m(i+1,j)] = getScattering(valley(i,j), Eint(i,j));
-        [E(i+1,j), Eint(i+1,j)] = updateEnergy(scatt_mech(i,j), E(i,j));
+        [E(i+1,j), Eint(i+1,j)] = updateEnergy(scatt_mech(i,j), E(i,j), valley(i,j), valley(i+1,j));
 
         theta(i,j) = getTheta(scatt_mech(i,j), E(i,j), E(i+1,j));
         phi(i,j) = getPhi();
@@ -285,7 +285,6 @@ ylabel('E_k (J)');
 hold off;
 
 % c) Population of each valley for the uniform electric field of 0.5, 1, 2, 5, 8, and 10 kV/cm
-
 figure();
 hold on;
 plot(timeStep,valley_G(:,1));
@@ -307,7 +306,6 @@ hold off;
 
 % d) For the electric field of 5 kV/cm, plot the evolution of the x and y
 %    components of the electron velocity as well.
-
 if (Efield == 5)
   figure();
   hold on;

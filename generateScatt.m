@@ -49,7 +49,7 @@ function out = generateScatt()
   GTot_G(7,:) = G + Gpop_abs + Gpop_em + Giv_abs_GL + Giv_em_GL + Giv_abs_GX + Giv_em_GX;
   GTot_G_Max = max(GTot_G(7,:));
   
-  
+  %{
   figure();
   hold on;
   for i = 1:7
@@ -58,7 +58,7 @@ function out = generateScatt()
   title('GTot_G');
   legend('AC','AC+POP_abs','AC+POP_abs+POP_em','AC+POP+GL_abs','AC+POP+GL_abs+GL_em'...
       ,'AC+POP+GL+GX_abs','AC+POP+GL+GX_abs+GL_em');
-  
+  %}
 
   GTot_X(1,:) = G;
   GTot_X(2,:) = G + Gpop_abs;
