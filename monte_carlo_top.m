@@ -10,8 +10,8 @@ close all;
 clear;
 format long;
 numOfParticles = 1001; % Number of particles being tested
-numOfTimeSteps = 201; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
-deltaT = 10e-15; % 10 fs for now. Shoot for between 1-10 fs.
+numOfTimeSteps = 1001; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
+deltaT = 1e-15; % 10 fs for now. Shoot for between 1-10 fs.
 %global Efield;
 
 % Depending on the scattering mechanism applied to the electron, a variable can be equated to these
