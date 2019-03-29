@@ -53,7 +53,8 @@ vs = 5240; % Longitudinal acoustic velocity (m/s)
 hwo = 0.03536*e; % longitudinal optical phonon energy (J)
 m0 = 9.11e-31; % kg
 %Efield = [0.5 1 2 5 8 10]; % kV/cm Efield(1) = 0.5 ... Efield(6) = 10.
-Efield = 1000*e;
+%Efield = 1000*e;
+Efield = 1000;
 % -----------------------
 % Initializing parameters
 % -----------------------
@@ -80,9 +81,12 @@ E_avg = zeros(numOfTimeSteps,1);
 E_avg_G = zeros(numOfTimeSteps,1);
 E_avg_X = zeros(numOfTimeSteps,1);
 E_avg_L = zeros(numOfTimeSteps,1);
+
+P_avg = zeros(numOfTimeSteps,1);
 Px_avg = zeros(numOfTimeSteps,1);
 Py_avg = zeros(numOfTimeSteps,1);
 Pz_avg = zeros(numOfTimeSteps,1);
+
 valley_avg = zeros(numOfTimeSteps,1);
 v_avg = zeros(numOfTimeSteps,1);
 
@@ -135,6 +139,7 @@ hold on;
 histogram(abs(P_init));
 title('Initial Pz');
 xlabel('Momentum (kgm/s)');
+ylabel('Number of Electrons');
 hold off;
 
 figure();
@@ -142,6 +147,7 @@ hold on;
 histogram(E_init);
 title('Initial Energy');
 xlabel('Energy (eV)');
+ylabel('Number of Electrons');
 hold off;
 
 % -----------------------
@@ -165,6 +171,7 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   Px_tot = 0;
   Py_tot = 0;
   Pz_tot = 0;
+  P_tot = 0;
   valley_tot = 0;
   E_old = 0;
   eff_m_tot = 0;
@@ -177,6 +184,7 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
         Eint(i+1,j) = Eint(i,j);
         %update momentum, p(itime + 1) = p(itime) - eE*deltaT
         P(i+1,j) = P(i,j) - e*Efield*deltaT;
+        %P(i+1,j) = P(i,j) - Efield*deltaT;
         Px(i+1,j) = P(i+1,j)*Px(i,j);
         Py(i+1,j) = P(i+1,j)*Py(i,j); %TODO this???
         %Px(i+1,j) = Px(i,j);
@@ -195,12 +203,12 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
             theta(i,j) = getTheta(scatt_mech(i,j), E(i,j), E(i+1,j));
             phi(i,j) = getPhi();
 
-        % Update Momentum
-        % p(new) = p(itime) - eE*tff
-
+            % Update Momentum
+        	% p(new) = p(itime) - eE*tff
 
             [Px(i+1,j), Py(i+1,j), Pz(i+1,j)] = getP(Px(i,j), Py(i,j), Pz(i,j), P(i,j), theta(i,j), phi(i,j));
             P(i+1,j) = P(i,j) - e*Efield*tff(1,j); % momentum after scattering
+            %P(i+1,j) = P(i,j) - Efield*tff(1,j); % momentum after scattering
             Px(i+1,j) = P(i+1,j)*Px(i+1,j);
             Py(i+1,j) = P(i+1,j)*Py(i+1,j); % TODO this???
             Pz(i+1,j) = P(i+1,j)*Pz(i+1,j);
@@ -227,6 +235,7 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
       Px_tot = Px_tot + Px(i,j);
       Py_tot = Py_tot + Py(i,j);
       Pz_tot = Pz_tot + Pz(i,j);
+      P_tot = P_tot + P(i,j);
       valley_tot = valley_tot + valley(i,j);
       eff_m_tot = eff_m_tot + eff_m(i,j);
       v_tot = v_tot + Pz(i,j)/eff_m(i,j); %%%%
@@ -245,19 +254,23 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   Px_avg(i,1) = (Px_tot/numOfParticles);
   Py_avg(i,1) = (Py_tot/numOfParticles);
   Pz_avg(i,1) = (Pz_tot/numOfParticles);
+  P_avg(i,1) = (P_tot/numOfParticles);
   valley_avg(i,1) = valley_tot/numOfParticles;
 
   %v_avg(i,1) = - v_tot/numOfParticles;
   %v_avg(i+1,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
-  %v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
+  %v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/mean(Efield*tff(1,:));
   %v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/(e*Efield*deltaT);
   %v_avg(i+1,1) = - mean(E(i+1,:) - E(i,:))/mean(P(i,:));
-  v_avg(i,1) = abs(Pz_avg(i,1)/eff_m_avg(i,1));
-
+  %v_avg(i,1) = abs(Pz_avg(i,1)/eff_m_avg(i,1));
+    
+  
   eff_m_avg(i,1) = eff_m_tot/numOfParticles;
 
-  vx_avg(i,1) = abs(Px_avg(i,1)/eff_m_avg(i,1));
-  vy_avg(i,1) = abs(Py_avg(i,1)/eff_m_avg(i,1));
+  v_avg(i,1) = real(P_avg(i,1)/eff_m_avg(i,1));
+  
+  vx_avg(i,1) = real(Px_avg(i,1)/eff_m_avg(i,1));
+  vy_avg(i,1) = real(Py_avg(i,1)/eff_m_avg(i,1));
 
 end % i loop
 
@@ -272,7 +285,7 @@ E_avg_X(numOfTimeSteps,1) = NaN;
 E_avg_L(numOfTimeSteps,1) = NaN;
 vx_avg(numOfTimeSteps,1) = NaN;
 vy_avg(numOfTimeSteps,1) = NaN;
-
+eff_m_avg(numOfTimeSteps,1) = NaN;
 % -----------------------
 % 2) Plot the time evolution of:
 %    a) The average electron velocity along the field direction
@@ -296,14 +309,14 @@ hold off;
 % b) Average electron kinetic energy (for each valley as well as the ensemble as a whole)
 figure();
 hold on;
-plot(timeStep,E_avg);
+plot(timeStep,E_avg/e);
 title('Average Ek Over Time');
-plot(timeStep,E_avg_G);
-plot(timeStep,E_avg_X);
-plot(timeStep,E_avg_L);
+plot(timeStep,E_avg_G/e);
+plot(timeStep,E_avg_X/e);
+plot(timeStep,E_avg_L/e);
 legend('Total Avg Ek', '\Gamma', 'X', 'L');
 xlabel('Time (s)');
-ylabel('E_k (J)');
+ylabel('E_k (eV)');
 hold off;
 
 % c) Population of each valley for the uniform electric field of 0.5, 1, 2, 5, 8, and 10 kV/cm
