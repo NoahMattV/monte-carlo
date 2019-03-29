@@ -15,7 +15,7 @@ function [energy, energyInt] = updateEnergy(scatt_mech, E_in, old_valley, new_va
   switch old_valley
     case 1 % Gamma
       if (new_valley == 1) % to Gamma
-        hwif = hbar*hwo
+        hwif = hbar*hwo;
       elseif (new_valley == 2) % to X
         hwif = hbar*w_GX;
       elseif (new_valley == 3) % to L
@@ -25,17 +25,17 @@ function [energy, energyInt] = updateEnergy(scatt_mech, E_in, old_valley, new_va
       end
     case 2 % X
       if (new_valley == 1) % to Gamma
-        hwif = hbar*w_XG
+        hwif = hbar*w_GX;
       elseif (new_valley == 2) % to X
         hwif = hbar*w_XX;
       elseif (new_valley == 3) % to L
-        hwif = hbar*w_XL;
+        hwif = hbar*w_LX;
       else
         disp('Messed up new_valley');
       end
     case 3 % L
       if (new_valley == 1) % to Gamma
-        hwif = hbar*w_LG;
+        hwif = hbar*w_GL;
       elseif (new_valley == 2) % to X
         hwif = hbar*w_LX;
       elseif (new_valley == 3) % to L
@@ -55,9 +55,9 @@ function [energy, energyInt] = updateEnergy(scatt_mech, E_in, old_valley, new_va
     case 3 % POP Em
         energy = E_in - hwo;
     case 4 % IV Abs (inelastic, isotropic)
-        energy = E_in + hwo + Ec(old_valley) - Ec(new_valley);
+        energy = E_in + hwif + Ec(old_valley) - Ec(new_valley);
     case 5 % IV Em
-        energy = E_in - hwo + Ec(old_valley) - Ec(new_valley);
+        energy = E_in - hwif + Ec(old_valley) - Ec(new_valley);
     case 6 % self
         energy = E_in;
     otherwise

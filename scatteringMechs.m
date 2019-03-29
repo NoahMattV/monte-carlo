@@ -42,6 +42,9 @@ Dac_X = 9.0*e;
 
 mo = 9.11e-31; %kg
 m = 0.067*mo;
+mG = 0.067*mo;
+mL = 0.85*mo;
+mX = 0.85*mo;
 mdos = m;
 Ec = 0;
 Eg = 1.42*e; % Egap in Joules
@@ -90,10 +93,12 @@ G = zeros(1,1001);
 for i = 1:1001
    %gc3d(1,i) = 1/(2*pi^2) * (2*mdos/hbar^2)^(3/2) * sqrt(E(i) - Ec); % 3D DOS for GaAs
    %G(1,i) = 2 * 2*pi/hbar * Dac_G^2 * kT/(2*rho*vs^2) * (1/2) * gc3d(1,i);
-   GG(1,i) = (Dac_G^2 * kT)/(2*pi*hbar*rho*(vs^2)) * (2*m/(hbar^2))^(3/2) * E(i)^(1/2);
-   GL(1,i) = (Dac_L^2 * kT)/(2*pi*hbar*rho*(vs^2)) * (2*m/(hbar^2))^(3/2) * E(i)^(1/2);
-   GX(1,i) = (Dac_X^2 * kT)/(2*pi*hbar*rho*(vs^2)) * (2*m/(hbar^2))^(3/2) * E(i)^(1/2);
+   GG(1,i) = (Dac_G^2 * kT)/(2*pi*hbar*rho*(vs^2)) * (2*mG/(hbar^2))^(3/2) * E(i)^(1/2);
+   GL(1,i) = (Dac_L^2 * kT)/(2*pi*hbar*rho*(vs^2)) * (2*mL/(hbar^2))^(3/2) * E(i)^(1/2);
+   GX(1,i) = (Dac_X^2 * kT)/(2*pi*hbar*rho*(vs^2)) * (2*mX/(hbar^2))^(3/2) * E(i)^(1/2);
    G(1,i) = GG(1,i) + GL(1,i) + GX(1,i);
+
+
 
    %G(1,i) = GG(1,i);
 end
@@ -135,9 +140,23 @@ Gm_pop = zeros(1,1001);
 
 global Gpop_abs; % scattering rate
 global Gpop_em;
+
+global Gpop_abs_X;
+global Gpop_em_X;
+
+global Gpop_abs_L;
+global Gpop_em_L;
+
 Gpop_abs = zeros(1,1001); % scattering rate
 Gpop_em = zeros(1,1001);
 Gpop_tot = zeros(1,1001);
+
+Gpop_abs_L = zeros(1,1001); % scattering rate
+Gpop_em_L = zeros(1,1001);
+
+Gpop_abs_X = zeros(1,1001); % scattering rate
+Gpop_em_X = zeros(1,1001);
+
 
 %wo = (0.03536*e)/hbar; % longitudinal optical phonon energy hbar*wo (eV) (hbar already defined, so explicitly defining wo)
 %hwo = 0.03536*e; % longitudinal optical phonon energy (eV)
@@ -145,13 +164,19 @@ Gpop_tot = zeros(1,1001);
 
 for i = 1:1001
    Gpop_abs(1,i) = real(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/m)) * (No*asinh(E(i)/hwo)^(1/2)));
+   Gpop_abs_X(1,i) = real(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/mX)) * (No*asinh(E(i)/hwo)^(1/2)));
+   Gpop_abs_L(1,i) = real(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/mL)) * (No*asinh(E(i)/hwo)^(1/2)));
 
    Gm_pop(1,i) = real(((q^2)*wo*(ko/kinf - 1))/(4*pi*ko*Eo*hbar*sqrt(2*E(i)/m)) * (No*sqrt(1 + hwo/E(i)) + (No+1)*sqrt(1 - hwo/E(i)) - hwo*No/E(i) * asinh(E(i)/hwo)^(1/2) + hwo*(No+1)/E(i) * asinh(E(i)/hwo - 1)^(1/2)));
 
    if (E(i) > hbar*wo)
        Gpop_em(1,i) = ((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/m)) * ((No + 1)*asinh((E(i)/hwo) -1)^(1/2));
+       Gpop_em_X(1,i) = ((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/mX)) * ((No + 1)*asinh((E(i)/hwo) -1)^(1/2));
+       Gpop_em_L(1,i) = ((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/mL)) * ((No + 1)*asinh((E(i)/hwo) -1)^(1/2));
    else
        Gpop_em(1,i) = 0;
+       Gpop_em_X(1,i) = 0;
+       Gpop_em_L(1,i) = 0;
    end
    Gpop_tot(1,i) = Gpop_abs(1,i) + Gpop_em(1,i);
 end
