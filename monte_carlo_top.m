@@ -10,7 +10,11 @@ close all;
 clear;
 format long;
 numOfParticles = 1001; % Number of particles being tested
+<<<<<<< HEAD
 numOfTimeSteps = 201; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
+=======
+numOfTimeSteps = 101; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
+>>>>>>> c08d10055e438d16d86063895988033cb85f765e
 deltaT = 10e-15; % 10 fs for now. Shoot for between 1-10 fs.
 %global Efield;
 
@@ -53,7 +57,11 @@ vs = 5240; % Longitudinal acoustic velocity (m/s)
 hwo = 0.03536*e; % longitudinal optical phonon energy (J)
 m0 = 9.11e-31; % kg
 %Efield = [0.5 1 2 5 8 10]; % kV/cm Efield(1) = 0.5 ... Efield(6) = 10.
+<<<<<<< HEAD
 Efield = 1000*e;
+=======
+Efield = 10000;
+>>>>>>> c08d10055e438d16d86063895988033cb85f765e
 % -----------------------
 % Initializing parameters
 % -----------------------
@@ -169,7 +177,7 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   E_old = 0;
   eff_m_tot = 0;
   v_tot = 0; % velocity
-  
+
   for j = 1:(numOfParticles)
       if (tff(1,j) > deltaT) % no scattering before next timestep.
         tff(1,j) = tff(1,j) - deltaT;
@@ -178,7 +186,9 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
         %update momentum, p(itime + 1) = p(itime) - eE*deltaT
         P(i+1,j) = P(i,j) - e*Efield*deltaT;
         Px(i+1,j) = P(i+1,j)*Px(i,j);
-        Py(i+1,j) = P(i+1,j)*Py(i,j);
+        Py(i+1,j) = P(i+1,j)*Py(i,j); %TODO this???
+        %Px(i+1,j) = Px(i,j);
+        %Py(i+1,j) = Py(i,j);
         Pz(i+1,j) = P(i+1,j)*Pz(i,j);
         eff_m(i+1,j) = eff_m(i,j);
       else
@@ -187,7 +197,11 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
         %E_old = E(i,j);
 
         [scatt_mech(i,j), valley(i+1,j), eff_m(i+1,j)] = getScattering(valley(i,j), Eint(i,j));
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> c08d10055e438d16d86063895988033cb85f765e
         if (scatt_mech(i,j) ~= SELF) %self-scattering
             [E(i+1,j), Eint(i+1,j)] = updateEnergy(scatt_mech(i,j), E(i,j), valley(i,j), valley(i+1,j));
             theta(i,j) = getTheta(scatt_mech(i,j), E(i,j), E(i+1,j));
@@ -196,11 +210,19 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
         % Update Momentum
         % p(new) = p(itime) - eE*tff
 
+<<<<<<< HEAD
         
             [Px(i+1,j), Py(i+1,j), Pz(i+1,j)] = getP(Px(i,j), Py(i,j), Pz(i,j), P(i,j), theta(i,j), phi(i,j));
             P(i+1,j) = P(i,j) - e*Efield*tff(1,j); % momentum after scattering
             Px(i+1,j) = P(i+1,j)*Px(i+1,j);
             Py(i+1,j) = P(i+1,j)*Py(i+1,j);
+=======
+
+            [Px(i+1,j), Py(i+1,j), Pz(i+1,j)] = getP(Px(i,j), Py(i,j), Pz(i,j), P(i,j), theta(i,j), phi(i,j));
+            P(i+1,j) = P(i,j) - e*Efield*tff(1,j); % momentum after scattering
+            Px(i+1,j) = P(i+1,j)*Px(i+1,j);
+            Py(i+1,j) = P(i+1,j)*Py(i+1,j); % TODO this???
+>>>>>>> c08d10055e438d16d86063895988033cb85f765e
             Pz(i+1,j) = P(i+1,j)*Pz(i+1,j);
         % come back with updated post scattering, P_as, E_as
         end
@@ -227,7 +249,7 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
       Pz_tot = Pz_tot + Pz(i,j);
       valley_tot = valley_tot + valley(i,j);
       eff_m_tot = eff_m_tot + eff_m(i,j);
-      v_tot = v_tot + P(i,j)/eff_m(i,j); %%%%
+      v_tot = v_tot + Pz(i,j)/eff_m(i,j); %%%%
   end % j loop
 
   % get average E, Px, Py, Pz, and valley occupation(add up and divide by numOfParticles)
@@ -247,11 +269,17 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
 
   %v_avg(i,1) = - v_tot/numOfParticles;
   %v_avg(i+1,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
+<<<<<<< HEAD
   v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
+=======
+  %v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
+>>>>>>> c08d10055e438d16d86063895988033cb85f765e
   %v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/(e*Efield*deltaT);
   %v_avg(i+1,1) = - mean(E(i+1,:) - E(i,:))/mean(P(i,:));
+  v_avg(i,1) = abs(Pz_avg(i,1)/eff_m_avg(i,1));
   
   eff_m_avg(i,1) = eff_m_tot/numOfParticles;
+  
   vx_avg(i,1) = abs(Px_avg(i,1)/eff_m_avg(i,1));
   vy_avg(i,1) = abs(Py_avg(i,1)/eff_m_avg(i,1));
 
