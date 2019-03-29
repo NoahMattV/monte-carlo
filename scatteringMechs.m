@@ -78,6 +78,9 @@ t2 = zeros(1,1001);
 % ---------------------------------------------------------------------------------------
 
 gc3d = zeros(1,1001);
+global GG;
+global GL;
+global GX;
 GG = zeros(1,1001);
 GL = zeros(1,1001);
 GX = zeros(1,1001);
@@ -206,6 +209,12 @@ E_LX = 0.0293*e;
 E_XX = 0.0299*e;
 
 % omegas
+global w_GL;
+global w_GX;
+global w_LL;
+global w_LX;
+global w_XX;
+
 w_GL = E_GL/hbar;
 w_GX = E_GX/hbar;
 w_LL = E_LL/hbar;

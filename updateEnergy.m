@@ -1,11 +1,52 @@
 % update energy after scattering based on mechanism
-
+% valleys: Gamma = 1, X = 2, L = 3
 function [energy, energyInt] = updateEnergy(scatt_mech, E_in, old_valley, new_valley)
   global hwo;
+  global w_GL;
+  global w_GX;
+  global w_LL;
+  global w_LX;
+  global w_XX;
+  global hbar;
   global e;
   Ec = [1.42*e 1.90*e 1.71*e]; % minimum energy in Gamma, X, L
   E = linspace(1e-255,2*e,1001); % 0 to 2*e Joules
-  % what is w in this? I'm pretty sure it has to do with applied E field.
+
+  switch old_valley
+    case 1 % Gamma
+      if (new_valley == 1) % to Gamma
+        hwif = hbar*hwo
+      elseif (new_valley == 2) % to X
+        hwif = hbar*w_GX;
+      elseif (new_valley == 3) % to L
+        hwif = hbar*w_GL;
+      else
+        disp('Messed up new_valley');
+      end
+    case 2 % X
+      if (new_valley == 1) % to Gamma
+        hwif = hbar*w_XG
+      elseif (new_valley == 2) % to X
+        hwif = hbar*w_XX;
+      elseif (new_valley == 3) % to L
+        hwif = hbar*w_XL;
+      else
+        disp('Messed up new_valley');
+      end
+    case 3 % L
+      if (new_valley == 1) % to Gamma
+        hwif = hbar*w_LG;
+      elseif (new_valley == 2) % to X
+        hwif = hbar*w_LX;
+      elseif (new_valley == 3) % to L
+        hwif = hbar*w_LL;
+      else
+        disp('Messed up new_valley');
+      end
+    otherwise
+      disp('uh oh. Messed up old_valley');
+  end % switch
+
   switch scatt_mech
     case 1 % Acoustic (elastic, isotropic)
         energy = E_in;
@@ -13,7 +54,7 @@ function [energy, energyInt] = updateEnergy(scatt_mech, E_in, old_valley, new_va
         energy = E_in + hwo;
     case 3 % POP Em
         energy = E_in - hwo;
-    case 4 % IV Abs (inelastic, isotropic) 
+    case 4 % IV Abs (inelastic, isotropic)
         energy = E_in + hwo + Ec(old_valley) - Ec(new_valley);
     case 5 % IV Em
         energy = E_in - hwo + Ec(old_valley) - Ec(new_valley);

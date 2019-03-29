@@ -2,7 +2,7 @@
 function out = getTff()
   rt = rand;
 
-  global GTot_L_Max;
-  Gamma_o = max(GTot_L_Max);
+  global GTot_G_Max;
+  Gamma_o = max(GTot_G_Max);
   out = (-1/Gamma_o)*log(rt);
 end
