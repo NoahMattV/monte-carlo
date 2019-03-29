@@ -139,7 +139,7 @@ for i = 1:numOfParticles
     P_init(i) = Pz(1,i)/e;
     E_init(i) = E(1,i)/e;
 end
-
+%{
 figure();
 hold on;
 histogram(abs(P_init));
@@ -155,7 +155,7 @@ title('Initial Energy');
 xlabel('Energy (eV)');
 ylabel('Number of Electrons');
 hold off;
-
+%}
 % -----------------------
 % Generate time frame
 % -----------------------
@@ -303,7 +303,7 @@ eff_m_avg(numOfTimeSteps,1) = NaN;
 % -----------------------
 
 % <v> = - deltaEk/(e*Efield*tff)
-
+%{
 % a) The average electron velocity along the field direction
 figure();
 hold on;
@@ -345,7 +345,7 @@ histogram(valley);
 title('Valley Occupation at end');
 hold off;
 %}
-
+%}
 % d) For the electric field of 5 kV/cm, plot the evolution of the x and y
 %    components of the electron velocity as well.
 if (Efield == 5)
