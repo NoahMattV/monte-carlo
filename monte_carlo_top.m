@@ -16,7 +16,7 @@ clc;
 close all;
 clear;
 format long;
-numOfParticles = 1001; % Number of particles being tested
+numOfParticles = 101; % Number of particles being tested
 numOfTimeSteps = 101; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
 deltaT = 10e-15; % 10 fs for now. Shoot for between 1-10 fs.
 % Watch out: The timestep can be so small such that the change in momentum
@@ -63,7 +63,7 @@ vs = 5240; % Longitudinal acoustic velocity (m/s)
 hwo = 0.03536*e; % longitudinal optical phonon energy (J)
 m0 = 9.11e-31; % kg
 %Efield = [0.5 1 2 5 8 10]; % kV/cm Efield(1) = 0.5 ... Efield(6) = 10.
-Efield = 1*10000; % convert to V/m (multiply by 100)
+Efield = 5*100; % convert to V/m (multiply by 100)
 
 % -----------------------
 % Initializing parameters
@@ -80,6 +80,10 @@ Px = zeros(numOfTimeSteps, numOfParticles);
 Py = zeros(numOfTimeSteps, numOfParticles);
 Pz = zeros(numOfTimeSteps, numOfParticles);
 P = zeros(numOfTimeSteps, numOfParticles);
+
+vx = zeros(numOfTimeSteps, numOfParticles);
+vy = zeros(numOfTimeSteps, numOfParticles);
+vz = zeros(numOfTimeSteps, numOfParticles);
 
 tff = zeros(1,numOfParticles);
 
@@ -98,6 +102,7 @@ Py_avg = zeros(numOfTimeSteps,1);
 Pz_avg = zeros(numOfTimeSteps,1);
 valley_avg = zeros(numOfTimeSteps,1);
 v_avg = zeros(numOfTimeSteps,1);
+v_avg_sumlater = zeros(numOfTimeSteps,1);
 
 eff_m_avg = zeros(numOfTimeSteps,1);
 vx_avg = zeros(numOfTimeSteps,1); % for the x and y components when E field is 5 kV/cm
@@ -186,9 +191,11 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   eff_m_tot = 0;
   v_tot = 0; % velocity
   scattered = 0;
-
+  E_initial = 0;
+  E_final = 0;
   % Iterate through each particle before moving to next timestep
   for j = 1:(numOfParticles)
+      E_initial = E(i,j);
       if (tff(1,j) > deltaT) % no scattering before next timestep.
 
         % Update free-flight time to next timestep
@@ -214,7 +221,7 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
 
       else
         scattered = 1;
-
+        remainingTime = deltaT;
         % there may be multiple scattering events in a single timestep
          while 1
 
@@ -279,7 +286,7 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
             end % if statement (self-scattering or not)
 
             % time between the scattering and next timestep
-            remainingTime = deltaT - tff(1,j);
+            remainingTime = remainingTime - tff(1,j);
 
             % Update Free-Flight Time
             tff(1,j) = getTff(); % get a new free-flight time for particle j
@@ -292,6 +299,7 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
             else
                 % set each value that's been incremented to the current
                 % timestep because we'll need them again.
+
                 E(i,j) = E(i+1,j);
                 Eint(i,j) = Eint(i+1,j);
                 valley(i,j) = valley(i+1,j);
@@ -334,6 +342,10 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
           disp('Px, Py, or Pz is NaN');
       end
 
+      E_final = E(i+1,j);
+
+      vz(i,j) = -(E_final - E_initial)/(e*Efield*deltaT);
+
       % add up for average values for each timestep.
       E_tot = E_tot + E(i,j);
       P_tot = P_tot + P(i,j);
@@ -342,7 +354,8 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
       Pz_tot = Pz_tot + Pz(i,j);
       valley_tot = valley_tot + valley(i,j);
       eff_m_tot = eff_m_tot + eff_m(i,j);
-      v_tot = v_tot + Pz(i,j)/eff_m(i,j); %%%%
+      v_tot = v_tot + vz(i,j);
+      %v_tot = v_tot + Pz(i,j)/eff_m(i,j); %%%%
   end % j loop
 
   % get average E, Px, Py, Pz, and valley occupation(add up and divide by numOfParticles)
@@ -364,13 +377,13 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   %v_avg(i,1) = - v_tot/numOfParticles;
   %v_avg(i+1,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
   %v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
-  %v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/(e*Efield*deltaT);
+   v_avg_sumlater(i,1) = - mean(E(i+1,:) - E(i,:))/(e*Efield*deltaT);
   %v_avg(i+1,1) = - mean(E(i+1,:) - E(i,:))/mean(P(i,:));
-
+   v_avg(i,1) = v_tot/numOfParticles;
 
   eff_m_avg(i,1) = eff_m_tot/numOfParticles;
 
-  v_avg(i,1) = abs(Pz_avg(i,1)/eff_m_avg(i,1));
+  %v_avg(i,1) = abs(Pz_avg(i,1)/eff_m_avg(i,1));
 
   vx_avg(i,1) = abs(Px_avg(i,1)/eff_m_avg(i,1));
   vy_avg(i,1) = abs(Py_avg(i,1)/eff_m_avg(i,1));
@@ -405,6 +418,14 @@ figure();
 hold on;
 plot(timeStep,v_avg(:,1));
 title('Average Velocity Over Time');
+xlabel('Time (s)');
+ylabel('Velocity (cm/s)');
+hold off;
+
+figure();
+hold on;
+plot(timeStep,v_avg_sumlater(:,1));
+title('Average Velocity Over Time - Sumlater');
 xlabel('Time (s)');
 ylabel('Velocity (cm/s)');
 hold off;
