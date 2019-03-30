@@ -33,8 +33,9 @@ function [s, v, m] = getScattering(v_in, E_int)
 
   switch v_in
     case 1 % Gamma
-      st = linspace(1, MaxG, 1001);
-      rg = st(1,ceil(r*1001));
+      %st = linspace(1, MaxG, 1001);
+      %rg = st(1,ceil(r*1001));
+      rg = r*MaxG;
       %rg = r*MaxG;
       if (rg <= GTot_G(1, E_int))
         % acoustic (elastic, isotropic)
@@ -86,9 +87,9 @@ function [s, v, m] = getScattering(v_in, E_int)
       end
 
     case 2 % X
-      st = linspace(1, MaxX, 1001);
-      rg = st(1,ceil(r*1001));
-      %rg = r*MaxX;
+      %st = linspace(1, MaxX, 1001);
+      %rg = st(1,ceil(r*1001));
+      rg = r*MaxX;
       if (rg <= GTot_X(1, E_int))
         % acoustic (elastic, isotropic)
         s = 1;
@@ -150,9 +151,9 @@ function [s, v, m] = getScattering(v_in, E_int)
       end
 
     case 3 % L
-      st = linspace(1, MaxL, 1001);
-      rg = st(1,ceil(r*1001));
-      %rg = r*MaxL;
+      %st = linspace(1, MaxL, 1001);
+      %rg = st(1,ceil(r*1001));
+      rg = r*MaxL;
       if (rg <= GTot_L(1, E_int))
         % acoustic (elastic, isotropic)
         s = 1;

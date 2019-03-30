@@ -5,13 +5,22 @@
 % Scattering Mechs
 % Acoustic, Ionized impurity, POP, and non-equivalent intervalley (Gamma, L, X)
 % Efield is applied along z-direction
+
+% current issues:
+% Efield doesn't seem to have a large effect on final product
+% Intervalley scattering is very rare
+% Are all units in SI?
+
 clc;
 close all;
 clear;
 format long;
 numOfParticles = 1001; % Number of particles being tested
-numOfTimeSteps = 201; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
+numOfTimeSteps = 101; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
 deltaT = 10e-15; % 10 fs for now. Shoot for between 1-10 fs.
+% Watch out: The timestep can be so small such that the change in momentum
+% isn't registered.
+
 %global Efield;
 
 % Depending on the scattering mechanism applied to the electron, a variable can be equated to these
@@ -53,8 +62,8 @@ vs = 5240; % Longitudinal acoustic velocity (m/s)
 hwo = 0.03536*e; % longitudinal optical phonon energy (J)
 m0 = 9.11e-31; % kg
 %Efield = [0.5 1 2 5 8 10]; % kV/cm Efield(1) = 0.5 ... Efield(6) = 10.
-%Efield = 1000*e;
-Efield = 1000;
+Efield = 1*10000; % convert to V/m (multiply by 100)
+
 % -----------------------
 % Initializing parameters
 % -----------------------
@@ -86,7 +95,6 @@ P_avg = zeros(numOfTimeSteps,1);
 Px_avg = zeros(numOfTimeSteps,1);
 Py_avg = zeros(numOfTimeSteps,1);
 Pz_avg = zeros(numOfTimeSteps,1);
-
 valley_avg = zeros(numOfTimeSteps,1);
 v_avg = zeros(numOfTimeSteps,1);
 
@@ -134,12 +142,12 @@ for i = 1:numOfParticles
     E_init(i) = E(1,i)/e;
 end
 
+%{
 figure();
 hold on;
 histogram(abs(P_init));
 title('Initial Pz');
 xlabel('Momentum (kgm/s)');
-ylabel('Number of Electrons');
 hold off;
 
 figure();
@@ -147,8 +155,8 @@ hold on;
 histogram(E_init);
 title('Initial Energy');
 xlabel('Energy (eV)');
-ylabel('Number of Electrons');
 hold off;
+%}
 
 % -----------------------
 % Generate time frame
@@ -176,50 +184,138 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   E_old = 0;
   eff_m_tot = 0;
   v_tot = 0; % velocity
+  scattered = 0;
 
+  % Iterate through each particle before moving to next timestep
   for j = 1:(numOfParticles)
       if (tff(1,j) > deltaT) % no scattering before next timestep.
+        
+        % Update free-flight time to next timestep
         tff(1,j) = tff(1,j) - deltaT;
-        E(i+1,j) = E(i,j);
-        Eint(i+1,j) = Eint(i,j);
+
+        %E(i+1,j) = E(i,j);
+        %Eint(i+1,j) = Eint(i,j);
+
         %update momentum, p(itime + 1) = p(itime) - eE*deltaT
-        P(i+1,j) = P(i,j) - e*Efield*deltaT;
-        %P(i+1,j) = P(i,j) - Efield*deltaT;
-        Px(i+1,j) = P(i+1,j)*Px(i,j);
-        Py(i+1,j) = P(i+1,j)*Py(i,j); %TODO this???
-        %Px(i+1,j) = Px(i,j);
-        %Py(i+1,j) = Py(i,j);
-        Pz(i+1,j) = P(i+1,j)*Pz(i,j);
+        %P(i+1,j) = P(i,j) - e*Efield*deltaT;
+        %P(i+1,j) = sqrt(2*eff_m(i,j)*E(i+1,j));
+
+        Px(i+1,j) = Px(i,j);
+        Py(i+1,j) = Py(i,j);
+        Pz(i+1,j) = Pz(i,j) - e*Efield*deltaT;
+
         eff_m(i+1,j) = eff_m(i,j);
-      else
-        % scattering before next timestep!
-        % check for scattering (update Enew)
-        %E_old = E(i,j);
+        P(i+1,j) = sqrt(Px(i+1,j)^2 + Py(i+1,j)^2 + Pz(i+1,j)^2);
 
-        [scatt_mech(i,j), valley(i+1,j), eff_m(i+1,j)] = getScattering(valley(i,j), Eint(i,j));
+        %E(i+1,j) = (abs(P(i+1,j))^2)/(2*eff_m(i+1,j));
+        E(i+1,j) = abs((P(i+1,j)^2)/(2*eff_m(i+1,j)));
+        Eint(i+1,j) = energyToInt(E(i+1,j));
 
-        if (scatt_mech(i,j) ~= SELF) %self-scattering
-            [E(i+1,j), Eint(i+1,j)] = updateEnergy(scatt_mech(i,j), E(i,j), valley(i,j), valley(i+1,j));
-            theta(i,j) = getTheta(scatt_mech(i,j), E(i,j), E(i+1,j));
-            phi(i,j) = getPhi();
+      else 
+        scattered = 1;
+        
+        % there may be multiple scattering events in a single timestep
+         while 1  
+            
+            % scattering before next timestep!
+            % check for scattering (update Enew)
+            %E_old = E(i,j);
 
-            % Update Momentum
-        	% p(new) = p(itime) - eE*tff
+            % momentum drift until time of scattering
+            Px(i,j) = Px(i,j);
+            Py(i,j) = Py(i,j);
+            Pz(i,j) = Pz(i,j) - e*Efield*tff(1,j);
+            P(i,j) = sqrt(Px(i,j)^2 + Py(i,j)^2 + Pz(i,j)^2);
 
-            [Px(i+1,j), Py(i+1,j), Pz(i+1,j)] = getP(Px(i,j), Py(i,j), Pz(i,j), P(i,j), theta(i,j), phi(i,j));
-            P(i+1,j) = P(i,j) - e*Efield*tff(1,j); % momentum after scattering
-            %P(i+1,j) = P(i,j) - Efield*tff(1,j); % momentum after scattering
-            Px(i+1,j) = P(i+1,j)*Px(i+1,j);
-            Py(i+1,j) = P(i+1,j)*Py(i+1,j); % TODO this???
-            Pz(i+1,j) = P(i+1,j)*Pz(i+1,j);
-        % come back with updated post scattering, P_as, E_as
-        end
+            % energy right before scattering
+            E(i,j) = abs((P(i,j)^2)/(2*eff_m(i,j)));
+            Eint(i,j) = energyToInt(E(i,j));
 
-        % Update Free-Flight Time
-        tff(1,j) = getTff(); % get a new free-flight time for particle j
+            % determine scattering mechanism
+            [scatt_mech(i,j), valley(i+1,j), eff_m(i+1,j)] = getScattering(valley(i,j), Eint(i,j));
+            % Only update angle of momentum if not self-scattering
+            if (scatt_mech(i,j) ~= SELF) % if not self-scattering
 
-      end % if statement
+                % energy after scattering
+                [E(i+1,j), Eint(i+1,j)] = updateEnergy(scatt_mech(i,j), E(i,j), valley(i,j), valley(i+1,j));
 
+                % new angles (theta and phi)
+                theta(i,j) = getTheta(scatt_mech(i,j), E(i,j), E(i+1,j));
+                phi(i,j) = getPhi();
+
+                % Update Momentum
+                % momentum components x, y, and z
+                [Px(i+1,j), Py(i+1,j), Pz(i+1,j)] = getP(Px(i,j), Py(i,j), Pz(i,j), P(i,j), theta(i,j), phi(i,j));
+            
+                % momentum after scattering
+                P(i+1,j) = sqrt(2*eff_m(i+1,j)*E(i+1,j));
+                %P(i+1,j) = sqrt(Px(i+1,j)^2 + Py(i+1,j)^2 + Pz(i+1,j)^2);
+                a1 = P(i+1,j);
+            
+                % multiply x, y, and z components by momentum after scattering
+                % Do I do this? Or is that redundant?
+                Px(i+1,j) = abs(P(i+1,j))*Px(i+1,j);
+                Py(i+1,j) = abs(P(i+1,j))*Py(i+1,j);
+                Pz(i+1,j) = abs(P(i+1,j))*Pz(i+1,j);
+                P(i+1,j) = sqrt(Px(i+1,j)^2 + Py(i+1,j)^2 + Pz(i+1,j)^2);
+                a2 = P(i+1,j);
+            
+           else %self-scattering
+                % Momentum angle doesn't change.
+                % Energy remains the same as right before scattering.
+                E(i+1,j) = E(i,j);
+                Eint(i+1,j) = Eint(i,j);
+            
+                %P(i,j) = sqrt(2*eff_m(i,j)*E(i,j));
+                %P(i+1,j) = sqrt(2*eff_m(i+1,j)*E(i+1,j));
+                %P(i,j) = sqrt(Px(i,j)^2 + Py(i,j)^2 + Pz(i,j)^2);
+
+                Px(i+1,j) = Px(i,j);
+                Py(i+1,j) = Py(i,j);
+                Pz(i+1,j) = Pz(i,j);
+                P(i+1,j) = sqrt(Px(i+1,j)^2 + Py(i+1,j)^2 + Pz(i+1,j)^2);
+            
+            end % if statement (self-scattering or not)
+
+            % time between the scattering and next timestep 
+            remainingTime = deltaT - tff(1,j);
+            
+            % Update Free-Flight Time
+            tff(1,j) = getTff(); % get a new free-flight time for particle j
+            
+            % will only continue if the free-flight time is larger than the
+            % time to the next timestep. Otherwise, perform scattering
+            % calculations again.
+            if (tff(1,j) > remainingTime)
+                break;
+            else
+                % set each value that's been incremented to the current
+                % timestep because we'll need them again.
+                E(i,j) = E(i+1,j);
+                Eint(i,j) = Eint(i+1,j);
+                valley(i,j) = valley(i+1,j);
+                eff_m(i,j) = eff_m(i+1,j);
+                Px(i,j) = Px(i+1,j);
+                Py(i,j) = Py(i+1,j);
+                Pz(i,j) = Pz(i+1,j);
+                P(i,j) = P(i+1,j);
+                %disp('double-dipping');
+            end   
+        end % while loop
+        
+        % update the momentum and energy from the time of scattering to 
+        % the next timestep
+        Px(i+1,j) = Px(i+1,j);
+        Py(i+1,j) = Py(i+1,j);
+        Pz(i+1,j) = Pz(i+1,j) - e*Efield*remainingTime;
+        P(i+1,j) = sqrt(Px(i+1,j)^2 + Py(i+1,j)^2 + Pz(i+1,j)^2);
+        
+        E(i+1,j) = abs((P(i+1,j)^2)/(2*eff_m(i+1,j)));
+        Eint(i+1,j) = energyToInt(E(i+1,j));
+        
+      end % if statement (scattering before next timestep?)
+
+      % add energies to their respective valleys for averaging.
       switch valley(i,j)
         case 1
           E_tot_G = E_tot_G + E(i,j);
@@ -231,11 +327,18 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
           disp('E_tot Error');
       end
 
+      % check to see if momentum components are undefined. 
+      if (isnan(Pz(i,j)) || isnan(Py(i,j)) || isnan(Px(i,j)))
+          % this shouldn't occur.
+          disp('Px, Py, or Pz is NaN');
+      end
+
+      % add up for average values for each timestep.
       E_tot = E_tot + E(i,j);
+      P_tot = P_tot + P(i,j);
       Px_tot = Px_tot + Px(i,j);
       Py_tot = Py_tot + Py(i,j);
       Pz_tot = Pz_tot + Pz(i,j);
-      P_tot = P_tot + P(i,j);
       valley_tot = valley_tot + valley(i,j);
       eff_m_tot = eff_m_tot + eff_m(i,j);
       v_tot = v_tot + Pz(i,j)/eff_m(i,j); %%%%
@@ -251,26 +354,25 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   E_avg_X(i,1) = (E_tot_X/valley_X(i,1));
   E_avg_L(i,1) = (E_tot_L/valley_L(i,1));
 
+  P_avg(i,1) = P_tot/numOfParticles;
   Px_avg(i,1) = (Px_tot/numOfParticles);
   Py_avg(i,1) = (Py_tot/numOfParticles);
   Pz_avg(i,1) = (Pz_tot/numOfParticles);
-  P_avg(i,1) = (P_tot/numOfParticles);
   valley_avg(i,1) = valley_tot/numOfParticles;
 
   %v_avg(i,1) = - v_tot/numOfParticles;
   %v_avg(i+1,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
-  %v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/mean(Efield*tff(1,:));
+  %v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
   %v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/(e*Efield*deltaT);
   %v_avg(i+1,1) = - mean(E(i+1,:) - E(i,:))/mean(P(i,:));
-  %v_avg(i,1) = abs(Pz_avg(i,1)/eff_m_avg(i,1));
-    
-  
+
+
   eff_m_avg(i,1) = eff_m_tot/numOfParticles;
 
-  v_avg(i,1) = real(P_avg(i,1)/eff_m_avg(i,1));
-  
-  vx_avg(i,1) = real(Px_avg(i,1)/eff_m_avg(i,1));
-  vy_avg(i,1) = real(Py_avg(i,1)/eff_m_avg(i,1));
+  v_avg(i,1) = abs(Pz_avg(i,1)/eff_m_avg(i,1));
+
+  vx_avg(i,1) = abs(Px_avg(i,1)/eff_m_avg(i,1));
+  vy_avg(i,1) = abs(Py_avg(i,1)/eff_m_avg(i,1));
 
 end % i loop
 
@@ -285,7 +387,7 @@ E_avg_X(numOfTimeSteps,1) = NaN;
 E_avg_L(numOfTimeSteps,1) = NaN;
 vx_avg(numOfTimeSteps,1) = NaN;
 vy_avg(numOfTimeSteps,1) = NaN;
-eff_m_avg(numOfTimeSteps,1) = NaN;
+
 % -----------------------
 % 2) Plot the time evolution of:
 %    a) The average electron velocity along the field direction
@@ -309,14 +411,14 @@ hold off;
 % b) Average electron kinetic energy (for each valley as well as the ensemble as a whole)
 figure();
 hold on;
-plot(timeStep,E_avg/e);
+plot(timeStep,E_avg);
 title('Average Ek Over Time');
-plot(timeStep,E_avg_G/e);
-plot(timeStep,E_avg_X/e);
-plot(timeStep,E_avg_L/e);
+plot(timeStep,E_avg_G);
+plot(timeStep,E_avg_X);
+plot(timeStep,E_avg_L);
 legend('Total Avg Ek', '\Gamma', 'X', 'L');
 xlabel('Time (s)');
-ylabel('E_k (eV)');
+ylabel('E_k (J)');
 hold off;
 
 % c) Population of each valley for the uniform electric field of 0.5, 1, 2, 5, 8, and 10 kV/cm
@@ -341,7 +443,7 @@ hold off;
 
 % d) For the electric field of 5 kV/cm, plot the evolution of the x and y
 %    components of the electron velocity as well.
-if (Efield == 5)
+%if (Efield == 5)
   figure();
   hold on;
   plot(timeStep,vx_avg(:,1));
@@ -351,7 +453,7 @@ if (Efield == 5)
   xlabel('Time (s)');
   ylabel('Velocity (cm/s)');
   hold off;
-end
+%end
 
 
 
