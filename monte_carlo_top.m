@@ -10,6 +10,7 @@
 % Efield doesn't seem to have a large effect on final product
 % Intervalley scattering is very rare
 % Are all units in SI?
+% What's love got to do with it?
 
 clc;
 close all;
@@ -189,7 +190,7 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   % Iterate through each particle before moving to next timestep
   for j = 1:(numOfParticles)
       if (tff(1,j) > deltaT) % no scattering before next timestep.
-        
+
         % Update free-flight time to next timestep
         tff(1,j) = tff(1,j) - deltaT;
 
@@ -211,12 +212,12 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
         E(i+1,j) = abs((P(i+1,j)^2)/(2*eff_m(i+1,j)));
         Eint(i+1,j) = energyToInt(E(i+1,j));
 
-      else 
+      else
         scattered = 1;
-        
+
         % there may be multiple scattering events in a single timestep
-         while 1  
-            
+         while 1
+
             % scattering before next timestep!
             % check for scattering (update Enew)
             %E_old = E(i,j);
@@ -246,12 +247,12 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
                 % Update Momentum
                 % momentum components x, y, and z
                 [Px(i+1,j), Py(i+1,j), Pz(i+1,j)] = getP(Px(i,j), Py(i,j), Pz(i,j), P(i,j), theta(i,j), phi(i,j));
-            
+
                 % momentum after scattering
                 P(i+1,j) = sqrt(2*eff_m(i+1,j)*E(i+1,j));
                 %P(i+1,j) = sqrt(Px(i+1,j)^2 + Py(i+1,j)^2 + Pz(i+1,j)^2);
                 a1 = P(i+1,j);
-            
+
                 % multiply x, y, and z components by momentum after scattering
                 % Do I do this? Or is that redundant?
                 Px(i+1,j) = abs(P(i+1,j))*Px(i+1,j);
@@ -259,13 +260,13 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
                 Pz(i+1,j) = abs(P(i+1,j))*Pz(i+1,j);
                 P(i+1,j) = sqrt(Px(i+1,j)^2 + Py(i+1,j)^2 + Pz(i+1,j)^2);
                 a2 = P(i+1,j);
-            
+
            else %self-scattering
                 % Momentum angle doesn't change.
                 % Energy remains the same as right before scattering.
                 E(i+1,j) = E(i,j);
                 Eint(i+1,j) = Eint(i,j);
-            
+
                 %P(i,j) = sqrt(2*eff_m(i,j)*E(i,j));
                 %P(i+1,j) = sqrt(2*eff_m(i+1,j)*E(i+1,j));
                 %P(i,j) = sqrt(Px(i,j)^2 + Py(i,j)^2 + Pz(i,j)^2);
@@ -274,15 +275,15 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
                 Py(i+1,j) = Py(i,j);
                 Pz(i+1,j) = Pz(i,j);
                 P(i+1,j) = sqrt(Px(i+1,j)^2 + Py(i+1,j)^2 + Pz(i+1,j)^2);
-            
+
             end % if statement (self-scattering or not)
 
-            % time between the scattering and next timestep 
+            % time between the scattering and next timestep
             remainingTime = deltaT - tff(1,j);
-            
+
             % Update Free-Flight Time
             tff(1,j) = getTff(); % get a new free-flight time for particle j
-            
+
             % will only continue if the free-flight time is larger than the
             % time to the next timestep. Otherwise, perform scattering
             % calculations again.
@@ -300,19 +301,19 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
                 Pz(i,j) = Pz(i+1,j);
                 P(i,j) = P(i+1,j);
                 %disp('double-dipping');
-            end   
+            end
         end % while loop
-        
-        % update the momentum and energy from the time of scattering to 
+
+        % update the momentum and energy from the time of scattering to
         % the next timestep
         Px(i+1,j) = Px(i+1,j);
         Py(i+1,j) = Py(i+1,j);
         Pz(i+1,j) = Pz(i+1,j) - e*Efield*remainingTime;
         P(i+1,j) = sqrt(Px(i+1,j)^2 + Py(i+1,j)^2 + Pz(i+1,j)^2);
-        
+
         E(i+1,j) = abs((P(i+1,j)^2)/(2*eff_m(i+1,j)));
         Eint(i+1,j) = energyToInt(E(i+1,j));
-        
+
       end % if statement (scattering before next timestep?)
 
       % add energies to their respective valleys for averaging.
@@ -327,7 +328,7 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
           disp('E_tot Error');
       end
 
-      % check to see if momentum components are undefined. 
+      % check to see if momentum components are undefined.
       if (isnan(Pz(i,j)) || isnan(Py(i,j)) || isnan(Px(i,j)))
           % this shouldn't occur.
           disp('Px, Py, or Pz is NaN');
