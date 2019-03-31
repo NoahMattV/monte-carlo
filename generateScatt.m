@@ -56,7 +56,7 @@ function out = generateScatt()
   GTot_G(6,:) = GG + Gpop_abs + Gpop_em + Giv_abs_GL + Giv_em_GL + Giv_abs_GX;
   GTot_G(7,:) = GG + Gpop_abs + Gpop_em + Giv_abs_GL + Giv_em_GL + Giv_abs_GX + Giv_em_GX;
   GTot_G_Max = max(GTot_G(7,:));
-
+  %GTot_G_Max = max(GTot_G(3,:));
 %{
   GTot_G(1,:) = GG;
   GTot_G(2,:) = Gpop_abs;
@@ -79,7 +79,7 @@ function out = generateScatt()
       ,'GX_abs','GX_em');
   hold off;
 %}
-  
+
   GTot_X(1,:) = GX;
   GTot_X(2,:) = GX + Gpop_abs_X;
   GTot_X(3,:) = GX + Gpop_abs_X + Gpop_em_X;
@@ -90,7 +90,7 @@ function out = generateScatt()
   GTot_X(8,:) = GX + Gpop_abs_X + Gpop_em_X + Giv_abs_XG + Giv_em_XG + Giv_abs_XL + Giv_em_XL + Giv_abs_XX;
   GTot_X(9,:) = GX + Gpop_abs_X + Gpop_em_X + Giv_abs_XG + Giv_em_XG + Giv_abs_XL + Giv_em_XL + Giv_abs_XX + Giv_em_XX;
   GTot_X_Max = max(GTot_X(9,:));
-
+  %GTot_X_Max = max(GTot_X(3,:));
 %{
   GTot_X(1,:) = GX;
   GTot_X(2,:) = Gpop_abs_X;
@@ -124,7 +124,7 @@ function out = generateScatt()
   GTot_L(8,:) = GL + Gpop_abs_L + Gpop_em_L + Giv_abs_LG + Giv_em_LG + Giv_abs_LL + Giv_em_LL + Giv_abs_LX;
   GTot_L(9,:) = GL + Gpop_abs_L + Gpop_em_L + Giv_abs_LG + Giv_em_LG + Giv_abs_LL + Giv_em_LL + Giv_abs_LX + Giv_em_LX;
   GTot_L_Max = max(GTot_L(9,:));
-
+  %GTot_L_Max = max(GTot_L(3,:));
 %{
   GTot_L(1,:) = GL;
   GTot_L(2,:) = Gpop_abs_L;

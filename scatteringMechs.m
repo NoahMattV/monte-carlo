@@ -45,8 +45,10 @@ Dac_X = 9.0*e;
 mo = 9.11e-31; %kg
 m = 0.067*mo;
 mG = 0.067*mo;
-mL = 0.85*mo;
-mX = 0.85*mo;
+%mL = 0.85*mo;
+mL = 0.22*mo;
+%mX = 0.85*mo;
+mX = 0.55*mo;
 mdos = m;
 Ec = 0;
 Eg = 1.42*e; % Egap in Joules
@@ -166,16 +168,16 @@ Gpop_em_X = zeros(1,1001);
 %No = 1/(exp(hwo/kT) - 1);
 
 for i = 1:1001
-   Gpop_abs(1,i) = abs(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/m)) * (No*asinh(E(i)/hwo)^(1/2)));
-   Gpop_abs_X(1,i) = abs(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/mX)) * (No*asinh(E(i)/hwo)^(1/2)));
-   Gpop_abs_L(1,i) = abs(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/mL)) * (No*asinh(E(i)/hwo)^(1/2)));
+   Gpop_abs(1,i) = 5*abs(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/m)) * (No*asinh(E(i)/hwo)^(1/2)));
+   Gpop_abs_X(1,i) = 1*abs(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/mX)) * (No*asinh(E(i)/hwo)^(1/2)));
+   Gpop_abs_L(1,i) = 1*abs(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/mL)) * (No*asinh(E(i)/hwo)^(1/2)));
 
    Gm_pop(1,i) = real(((q^2)*wo*(ko/kinf - 1))/(4*pi*ko*Eo*hbar*sqrt(2*E(i)/m)) * (No*sqrt(1 + hwo/E(i)) + (No+1)*sqrt(1 - hwo/E(i)) - hwo*No/E(i) * asinh(E(i)/hwo)^(1/2) + hwo*(No+1)/E(i) * asinh(E(i)/hwo - 1)^(1/2)));
 
    if (E(i) > hbar*wo)
-       Gpop_em(1,i) = abs(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/m)) * ((No + 1)*asinh((E(i)/hwo) -1)^(1/2)));
-       Gpop_em_X(1,i) = abs(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/mX)) * ((No + 1)*asinh((E(i)/hwo) -1)^(1/2)));
-       Gpop_em_L(1,i) = abs(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/mL)) * ((No + 1)*asinh((E(i)/hwo) -1)^(1/2)));
+       Gpop_em(1,i) = 5*abs(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/m)) * ((No + 1)*asinh((E(i)/hwo) -1)^(1/2)));
+       Gpop_em_X(1,i) = 1*abs(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/mX)) * ((No + 1)*asinh((E(i)/hwo) -1)^(1/2)));
+       Gpop_em_L(1,i) = 1*abs(((q^2)*wo*(ko/kinf - 1))/(2*pi*ko*Eo*hbar*sqrt(2*E(i)/mL)) * ((No + 1)*asinh((E(i)/hwo) -1)^(1/2)));
    else
        Gpop_em(1,i) = 0;
        Gpop_em_X(1,i) = 0;
@@ -394,7 +396,7 @@ gc3d_em_XG(1,i) = 1/(2*pi^2) * (2*m/hbar^2)^(3/2) * real(sqrt(E(i) - E_GX + delt
 gc3d_abs_LL(1,i) = 1/(2*pi^2) * (2*mL/(hbar^2))^(3/2) * real(sqrt(E(i) + E_LL));
 gc3d_em_LL(1,i) = 1/(2*pi^2) * (2*mL/(hbar^2))^(3/2) * real(sqrt(E(i) - E_LL));
 
-gc3d_abs_LX(1,i) = 1/(2*pi^2) * (2*mX/hbar^2)^(3/2) * real(sqrt(E(i) + E_LX + delta_E_XL)); %swapped - sign for delta_E_XL
+gc3d_abs_LX(1,i) = 1/(2*pi^2) * (2*mX/hbar^2)^(3/2) * real(sqrt(E(i) + E_LX + delta_E_XL)); %swap
 gc3d_em_LX(1,i) = 1/(2*pi^2) * (2*mX/hbar^2)^(3/2) * real(sqrt(E(i) - E_LX + delta_E_XL));
 
 gc3d_abs_XL(1,i) = 1/(2*pi^2) * (2*mL/hbar^2)^(3/2) * real(sqrt(E(i) - E_LX - delta_E_XL));

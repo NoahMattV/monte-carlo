@@ -16,8 +16,8 @@ clc;
 close all;
 clear;
 format long;
-numOfParticles = 101; % Number of particles being tested
-numOfTimeSteps = 101; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
+numOfParticles = 1001; % Number of particles being tested
+numOfTimeSteps = 1001; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
 deltaT = 10e-15; % 10 fs for now. Shoot for between 1-10 fs.
 % Watch out: The timestep can be so small such that the change in momentum
 % isn't registered.
@@ -127,13 +127,18 @@ for j = 1:numOfParticles
   P(1,j) = sqrt(2*eff_m(1,j)*E(1,j));
   Px(1,j) = P(1,j)*sin(theta_i)*cos(phi_i);
 
-  theta_i = getTheta(0,0,0);
-  phi_i = getPhi();
+  %theta_i = getTheta(0,0,0);
+  %phi_i = getPhi();
   Py(1,j) = P(1,j)*sin(theta_i)*sin(phi_i);
 
-  theta_i = getTheta(0,0,0);
+  %theta_i = getTheta(0,0,0);
   %phi_i = getPhi();
   Pz(1,j) = P(1,j)*cos(theta_i);
+  
+  %P(1,j) = sqrt(Px(1,j)^2 + Py(1,j)^2 + Pz(1,j)^2);
+
+  %E(1,j) = abs((P(1,j)^2)/(2*eff_m(1,j)));
+  %Eint(1,j) = energyToInt(E(1,j));
 end
 
 % -----------------------
@@ -148,7 +153,7 @@ for i = 1:numOfParticles
     E_init(i) = E(1,i)/e;
 end
 
-%{
+
 figure();
 hold on;
 histogram(abs(P_init));
@@ -162,7 +167,7 @@ histogram(E_init);
 title('Initial Energy');
 xlabel('Energy (eV)');
 hold off;
-%}
+
 
 % -----------------------
 % Generate time frame
@@ -190,6 +195,8 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   E_old = 0;
   eff_m_tot = 0;
   v_tot = 0; % velocity
+  vx_tot = 0;
+  vy_tot = 0;
   scattered = 0;
   E_initial = 0;
   E_final = 0;
@@ -344,8 +351,10 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
 
       E_final = E(i+1,j);
 
-      vz(i,j) = -(E_final - E_initial)/(e*Efield*deltaT);
-
+      %vz(i,j) = -(E_final - E_initial)/(e*Efield*deltaT);
+       vz(i,j) = abs(Pz(i,j))/eff_m(i,j);
+       vx(i,j) = abs(Px(i,j))/eff_m(i,j);
+       vy(i,j) = abs(Py(i,j))/eff_m(i,j);
       % add up for average values for each timestep.
       E_tot = E_tot + E(i,j);
       P_tot = P_tot + P(i,j);
@@ -355,6 +364,8 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
       valley_tot = valley_tot + valley(i,j);
       eff_m_tot = eff_m_tot + eff_m(i,j);
       v_tot = v_tot + vz(i,j);
+      vx_tot = vx_tot + vx(i,j);
+      vy_tot = vx_tot + vx(i,j);
       %v_tot = v_tot + Pz(i,j)/eff_m(i,j); %%%%
   end % j loop
 
@@ -377,16 +388,17 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   %v_avg(i,1) = - v_tot/numOfParticles;
   %v_avg(i+1,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
   %v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
-   v_avg_sumlater(i,1) = - mean(E(i+1,:) - E(i,:))/(e*Efield*deltaT);
   %v_avg(i+1,1) = - mean(E(i+1,:) - E(i,:))/mean(P(i,:));
    v_avg(i,1) = v_tot/numOfParticles;
+   vx_avg(i,1) = vx_tot/numOfParticles;
+   vy_avg(i,1) = vy_tot/numOfParticles;
 
   eff_m_avg(i,1) = eff_m_tot/numOfParticles;
 
   %v_avg(i,1) = abs(Pz_avg(i,1)/eff_m_avg(i,1));
-
-  vx_avg(i,1) = abs(Px_avg(i,1)/eff_m_avg(i,1));
-  vy_avg(i,1) = abs(Py_avg(i,1)/eff_m_avg(i,1));
+  %vz_avg(i,1) = abs(P
+  %vx_avg(i,1) = abs(Px_avg(i,1)/eff_m_avg(i,1));
+  %vy_avg(i,1) = abs(Py_avg(i,1)/eff_m_avg(i,1));
 
 end % i loop
 
@@ -399,8 +411,13 @@ E_avg(numOfTimeSteps,1) = NaN;
 E_avg_G(numOfTimeSteps,1) = NaN;
 E_avg_X(numOfTimeSteps,1) = NaN;
 E_avg_L(numOfTimeSteps,1) = NaN;
+v_avg(numOfTimeSteps,1) = NaN;
+vz_avg(numOfTimeSteps,1) = NaN;
 vx_avg(numOfTimeSteps,1) = NaN;
 vy_avg(numOfTimeSteps,1) = NaN;
+Pz_avg(numOfTimeSteps,1) = NaN;
+Px_avg(numOfTimeSteps,1) = NaN;
+Py_avg(numOfTimeSteps,1) = NaN;
 
 % -----------------------
 % 2) Plot the time evolution of:
@@ -416,19 +433,20 @@ vy_avg(numOfTimeSteps,1) = NaN;
 % a) The average electron velocity along the field direction
 figure();
 hold on;
-plot(timeStep,v_avg(:,1));
+plot(timeStep,v_avg(:,1)/100);
 title('Average Velocity Over Time');
 xlabel('Time (s)');
 ylabel('Velocity (cm/s)');
 hold off;
-
+%{
 figure();
 hold on;
-plot(timeStep,v_avg_sumlater(:,1));
-title('Average Velocity Over Time - Sumlater');
+plot(timeStep,Pz_avg(:,1));
+title('Average Pz');
 xlabel('Time (s)');
-ylabel('Velocity (cm/s)');
+ylabel('kgm/s');
 hold off;
+%}
 
 % b) Average electron kinetic energy (for each valley as well as the ensemble as a whole)
 figure();
@@ -468,8 +486,8 @@ hold off;
 %if (Efield == 5)
   figure();
   hold on;
-  plot(timeStep,vx_avg(:,1));
-  plot(timeStep,vy_avg(:,1));
+  plot(timeStep,vx_avg(:,1)/100);
+  plot(timeStep,vy_avg(:,1)/100);
   title('X and Y Components of Avg Velocity');
   legend('v_x', 'v_y');
   xlabel('Time (s)');

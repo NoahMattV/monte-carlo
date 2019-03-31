@@ -86,6 +86,7 @@ function out = individualScattMechs()
   title('GTot_G');
   legend('AC','POP_abs','POP_em','GL_abs','GL_em'...
       ,'GX_abs','GX_em');
+
   hold off;
 
 %{
@@ -116,7 +117,7 @@ function out = individualScattMechs()
   figure();
   hold on;
   for i = 1:9
-    plot(E(1:1001),GTot_X(i,:));
+    semilogy(E(1:1001),GTot_X(i,:));
   end
   title('GTot_X');
   legend('AC','POP_abs','POP_em','XG_abs','XG_em'...
@@ -154,7 +155,7 @@ function out = individualScattMechs()
   figure();
   hold on;
   for i = 1:9
-    plot(E(1:1001),GTot_L(i,:));
+    semilogy(E(1:1001),GTot_L(i,:));
   end
   title('GTot_L');
   legend('AC','POP_abs','POP_em','LG_abs','LG_em'...

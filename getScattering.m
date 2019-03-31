@@ -29,7 +29,7 @@ function [s, v, m] = getScattering(v_in, E_int)
   %v = randi([1,3], 1); % generates a random number in the range [1,3] inclusive (1, 2, or 3).
   % modify this to make sense in whatever respect you're using it in.
   r = rand();
-  
+
 
   switch v_in
     case 1 % Gamma
@@ -59,25 +59,29 @@ function [s, v, m] = getScattering(v_in, E_int)
         % Intervalley G to L abs (inelastic, isotropic)
         s = 4;
         v = 3;
-        m = 0.85*m0; % effective mass of density of states m = (16*ml*mt^2)^(1/3)
+        %m = 0.85*m0; % effective mass of density of states m = (16*ml*mt^2)^(1/3)
+        m = 0.22*m0;
 
       elseif (rg <= GTot_G(5, E_int))
         % Intervalley G to L em (inelastic, isotropic)
         s = 5;
         v = 3;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.22*m0;
 
       elseif (rg <= GTot_G(6, E_int))
         % Intervalley G to X abs (inelastic, isotropic)
         s = 4;
         v = 2;
-        m = 0.85*m0; % effective mass of density of states m = (9*ml*mt^2)^(1/3)
+        %m = 0.85*m0; % effective mass of density of states m = (9*ml*mt^2)^(1/3)
+        m = 0.55*m0;
 
       elseif (rg <= GTot_G(7, E_int))
         % Intervalley G to X em (inelastic, isotropic)
         s = 5;
         v = 2;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.55*m0;
 
       else
         % Self-scattering -- do nothing
@@ -94,25 +98,29 @@ function [s, v, m] = getScattering(v_in, E_int)
         % acoustic (elastic, isotropic)
         s = 1;
         v = 2;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.55*m0;
 
       elseif (rg <= GTot_X(2, E_int))
         % POP abs (inelastic, anisotropic)
         s = 2;
         v = 2;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.55*m0;
 
       elseif (rg <= GTot_X(3, E_int))
         % POP em (inelastic, anisotropic)
         s = 3;
         v = 2;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.55*m0;
 
       elseif (rg <= GTot_X(4, E_int))
         % Intervalley X to G abs (inelastic, isotropic)
         s = 4;
         v = 1;
         m = 0.067*m0;
+
       elseif (rg <= GTot_X(5, E_int))
         % Intervalley X to G em (inelastic, isotropic)
         s = 5;
@@ -123,31 +131,36 @@ function [s, v, m] = getScattering(v_in, E_int)
         % Intervalley X to L abs (inelastic, isotropic)
         s = 4;
         v = 3;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.22*m0;
 
       elseif (rg <= GTot_X(7, E_int))
         % Intervalley X to L em (inelastic, isotropic)
         s = 5;
         v = 3;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.22*m0;
 
       elseif (rg <= GTot_X(8, E_int))
         % Intervalley X to X abs (inelastic, isotropic)
         s = 4;
         v = 2;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.55*m0;
 
       elseif (rg <= GTot_X(9, E_int))
         % Intervalley X to X em (inelastic, isotropic)
         s = 5;
         v = 2;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.55*m0;
 
       else
         % Self-scattering -- do nothing
         s = 6;
         v = 2;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.55*m0;
       end
 
     case 3 % L
@@ -158,19 +171,22 @@ function [s, v, m] = getScattering(v_in, E_int)
         % acoustic (elastic, isotropic)
         s = 1;
         v = 3;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.22*m0;
 
       elseif (rg <= GTot_L(2, E_int))
         % POP abs (inelastic, anisotropic)
         s = 2;
         v = 3;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.22*m0;
 
       elseif (rg <= GTot_L(3, E_int))
         % POP em (inelastic, anisotropic)
         s = 3;
         v = 3;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.22*m0;
 
       elseif (rg <= GTot_L(4, E_int))
         % Intervalley L to G abs (inelastic, isotropic)
@@ -188,31 +204,37 @@ function [s, v, m] = getScattering(v_in, E_int)
         % Intervalley L to L abs (inelastic, isotropic)
         s = 4;
         v = 3;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.22*m0;
 
       elseif (rg <= GTot_L(7, E_int))
         % Intervalley L to L em (inelastic, isotropic)
         s = 5;
         v = 3;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.22*m0;
 
       elseif (rg <= GTot_L(8, E_int))
         % Intervalley L to X abs (inelastic, isotropic)
         s = 4;
         v = 2;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.55*m0;
 
       elseif (rg <= GTot_L(9, E_int))
         % Intervalley L to X em (inelastic, isotropic)
         s = 5;
         v = 2;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.55*m0;
 
       else
         % Self-scattering -- do nothing
         s = 6;
         v = 3;
-        m = 0.85*m0;
+        %m = 0.85*m0;
+        m = 0.22*m0;
+        
       end
 
     otherwise
