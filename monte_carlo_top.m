@@ -16,7 +16,7 @@ clc;
 close all;
 clear;
 format long;
-numOfParticles = 1001; % Number of particles being tested
+numOfParticles = 3001; % Number of particles being tested
 numOfTimeSteps = 1001; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
 deltaT = 10e-15; % 10 fs for now. Shoot for between 1-10 fs.
 % Watch out: The timestep can be so small such that the change in momentum
@@ -63,7 +63,7 @@ vs = 5240; % Longitudinal acoustic velocity (m/s)
 hwo = 0.03536*e; % longitudinal optical phonon energy (J)
 m0 = 9.11e-31; % kg
 %Efield = [0.5 1 2 5 8 10]; % kV/cm Efield(1) = 0.5 ... Efield(6) = 10.
-Efield = 5*100; % convert to V/m (multiply by 100)
+Efield = 2*100; % convert to V/m (multiply by 100)
 
 % -----------------------
 % Initializing parameters
@@ -134,7 +134,7 @@ for j = 1:numOfParticles
   %theta_i = getTheta(0,0,0);
   %phi_i = getPhi();
   Pz(1,j) = P(1,j)*cos(theta_i);
-  
+
   %P(1,j) = sqrt(Px(1,j)^2 + Py(1,j)^2 + Pz(1,j)^2);
 
   %E(1,j) = abs((P(1,j)^2)/(2*eff_m(1,j)));
@@ -157,14 +157,14 @@ end
 figure();
 hold on;
 histogram(abs(P_init));
-title('Initial Pz');
+title('Initial Pz for 2 kV/cm');
 xlabel('Momentum (kgm/s)');
 hold off;
 
 figure();
 hold on;
 histogram(E_init);
-title('Initial Energy');
+title('Initial Energy for 2 kV/cm');
 xlabel('Energy (eV)');
 hold off;
 
@@ -365,7 +365,7 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
       eff_m_tot = eff_m_tot + eff_m(i,j);
       v_tot = v_tot + vz(i,j);
       vx_tot = vx_tot + vx(i,j);
-      vy_tot = vx_tot + vx(i,j);
+      vy_tot = vy_tot + vy(i,j);
       %v_tot = v_tot + Pz(i,j)/eff_m(i,j); %%%%
   end % j loop
 
@@ -434,7 +434,7 @@ Py_avg(numOfTimeSteps,1) = NaN;
 figure();
 hold on;
 plot(timeStep,v_avg(:,1)/100);
-title('Average Velocity Over Time');
+title('Average Velocity Over Time for 2 kV/cm');
 xlabel('Time (s)');
 ylabel('Velocity (cm/s)');
 hold off;
@@ -452,7 +452,7 @@ hold off;
 figure();
 hold on;
 plot(timeStep,E_avg);
-title('Average Ek Over Time');
+title('Average Ek Over Time for 2 kV/cm');
 plot(timeStep,E_avg_G);
 plot(timeStep,E_avg_X);
 plot(timeStep,E_avg_L);
@@ -465,7 +465,7 @@ hold off;
 figure();
 hold on;
 plot(timeStep,valley_G(:,1));
-title('Valley Occupation Over Time')
+title('Valley Occupation Over Time for 2 kV/cm')
 plot(timeStep,valley_X(:,1));
 plot(timeStep,valley_L(:,1));
 legend('\Gamma', 'X', 'L');
@@ -483,17 +483,17 @@ hold off;
 
 % d) For the electric field of 5 kV/cm, plot the evolution of the x and y
 %    components of the electron velocity as well.
-%if (Efield == 5)
+if (Efield == 500)
   figure();
   hold on;
   plot(timeStep,vx_avg(:,1)/100);
   plot(timeStep,vy_avg(:,1)/100);
-  title('X and Y Components of Avg Velocity');
+  title('X and Y Components of Avg Velocity for 5 kV/cm');
   legend('v_x', 'v_y');
   xlabel('Time (s)');
   ylabel('Velocity (cm/s)');
   hold off;
-%end
+end
 
 
 

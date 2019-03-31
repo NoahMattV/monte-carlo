@@ -5,13 +5,24 @@
 % Scattering Mechs
 % Acoustic, Ionized impurity, POP, and non-equivalent intervalley (Gamma, L, X)
 % Efield is applied along z-direction
+
+% current issues:
+% Efield doesn't seem to have a large effect on final product
+% Intervalley scattering is very rare
+% Are all units in SI?
+% What's love got to do with it?
+
 clc;
 close all;
 clear;
 format long;
-numOfParticles = 1001; % Number of particles being tested
-numOfTimeSteps = 201; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
-deltaT = 10e-15; % 10 fs for now. Shoot for between 1-10 fs.
+numOfParticles = 1001; % Number of particles being tested. Keeping it low because of how many iterations this will go through
+numOfTimeSteps = 20001; % Number of timesteps. Each timestep should be between 1-10 fs (defined in code).
+numOfEfieldSteps = 11; % Number of iterations through the Efield loop.
+deltaT = 1e-15; % 10 fs for now. Shoot for between 1-10 fs.
+% Watch out: The timestep can be so small such that the change in momentum
+% isn't registered.
+
 %global Efield;
 
 % Depending on the scattering mechanism applied to the electron, a variable can be equated to these
@@ -52,15 +63,14 @@ kT = 0.0259*e; % (J)
 vs = 5240; % Longitudinal acoustic velocity (m/s)
 hwo = 0.03536*e; % longitudinal optical phonon energy (J)
 m0 = 9.11e-31; % kg
-%Efield = [0.5 1 2 5 8 10]; % kV/cm Efield(1) = 0.5 ... Efield(6) = 10.
-%Efield = 1000*e;
+Efield_array = [0.1 1 2 3 4 5 6 7 8 9 10];
+%Efield_array = [0.1 0.5 1 2 5 8 10]; % kV/cm Efield(1) = 0.5 ... Efield(6) = 10.
+v_Efield_tot = 0;
+v_Efield_avg = zeros(numOfEfieldSteps, numOfTimeSteps);
 
-v_avg_E = zeros(20,1);
+for g = 1:numOfEfieldSteps
+  Efield = Efield_array(g)*100; % convert to V/m (multiply by 100)
 
-EfkV = linspace(1,20,20);
-for r = 1:20
-  v_tot_E = 0;
-  Efield = EfkV(r)*1000;
 % -----------------------
 % Initializing parameters
 % -----------------------
@@ -77,6 +87,10 @@ Py = zeros(numOfTimeSteps, numOfParticles);
 Pz = zeros(numOfTimeSteps, numOfParticles);
 P = zeros(numOfTimeSteps, numOfParticles);
 
+vx = zeros(numOfTimeSteps, numOfParticles);
+vy = zeros(numOfTimeSteps, numOfParticles);
+vz = zeros(numOfTimeSteps, numOfParticles);
+
 tff = zeros(1,numOfParticles);
 
 valley_G = zeros(numOfTimeSteps, 1);
@@ -92,9 +106,9 @@ P_avg = zeros(numOfTimeSteps,1);
 Px_avg = zeros(numOfTimeSteps,1);
 Py_avg = zeros(numOfTimeSteps,1);
 Pz_avg = zeros(numOfTimeSteps,1);
-
 valley_avg = zeros(numOfTimeSteps,1);
 v_avg = zeros(numOfTimeSteps,1);
+v_avg_sumlater = zeros(numOfTimeSteps,1);
 
 eff_m_avg = zeros(numOfTimeSteps,1);
 vx_avg = zeros(numOfTimeSteps,1); % for the x and y components when E field is 5 kV/cm
@@ -119,13 +133,18 @@ for j = 1:numOfParticles
   P(1,j) = sqrt(2*eff_m(1,j)*E(1,j));
   Px(1,j) = P(1,j)*sin(theta_i)*cos(phi_i);
 
-  theta_i = getTheta(0,0,0);
-  phi_i = getPhi();
+  %theta_i = getTheta(0,0,0);
+  %phi_i = getPhi();
   Py(1,j) = P(1,j)*sin(theta_i)*sin(phi_i);
 
-  theta_i = getTheta(0,0,0);
+  %theta_i = getTheta(0,0,0);
   %phi_i = getPhi();
   Pz(1,j) = P(1,j)*cos(theta_i);
+
+  %P(1,j) = sqrt(Px(1,j)^2 + Py(1,j)^2 + Pz(1,j)^2);
+
+  %E(1,j) = abs((P(1,j)^2)/(2*eff_m(1,j)));
+  %Eint(1,j) = energyToInt(E(1,j));
 end
 
 % -----------------------
@@ -139,13 +158,13 @@ for i = 1:numOfParticles
     P_init(i) = Pz(1,i)/e;
     E_init(i) = E(1,i)/e;
 end
+
 %{
 figure();
 hold on;
 histogram(abs(P_init));
 title('Initial Pz');
 xlabel('Momentum (kgm/s)');
-ylabel('Number of Electrons');
 hold off;
 
 figure();
@@ -153,9 +172,9 @@ hold on;
 histogram(E_init);
 title('Initial Energy');
 xlabel('Energy (eV)');
-ylabel('Number of Electrons');
 hold off;
 %}
+
 % -----------------------
 % Generate time frame
 % -----------------------
@@ -170,7 +189,7 @@ timeStep = linspace(x1, x2, numOfTimeSteps);
 for i = 1:(numOfTimeSteps-1) % time-stepping loop
   clc;
   fprintf('%d/%d\n',i,numOfTimeSteps);
-  fprintf('%d/%d\n',r,20);
+  fprintf('%d/%d\n',g,numOfEfieldSteps);
   E_tot = 0;
   E_tot_G = 0;
   E_tot_X = 0;
@@ -183,50 +202,143 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   E_old = 0;
   eff_m_tot = 0;
   v_tot = 0; % velocity
-
+  vx_tot = 0;
+  vy_tot = 0;
+  scattered = 0;
+  E_initial = 0;
+  E_final = 0;
+  % Iterate through each particle before moving to next timestep
   for j = 1:(numOfParticles)
+      E_initial = E(i,j);
       if (tff(1,j) > deltaT) % no scattering before next timestep.
+
+        % Update free-flight time to next timestep
         tff(1,j) = tff(1,j) - deltaT;
-        E(i+1,j) = E(i,j);
-        Eint(i+1,j) = Eint(i,j);
+
+        %E(i+1,j) = E(i,j);
+        %Eint(i+1,j) = Eint(i,j);
+
         %update momentum, p(itime + 1) = p(itime) - eE*deltaT
-        P(i+1,j) = P(i,j) - e*Efield*deltaT;
-        %P(i+1,j) = P(i,j) - Efield*deltaT;
-        Px(i+1,j) = P(i+1,j)*Px(i,j);
-        Py(i+1,j) = P(i+1,j)*Py(i,j); %TODO this???
-        %Px(i+1,j) = Px(i,j);
-        %Py(i+1,j) = Py(i,j);
-        Pz(i+1,j) = P(i+1,j)*Pz(i,j);
+        %P(i+1,j) = P(i,j) - e*Efield*deltaT;
+        %P(i+1,j) = sqrt(2*eff_m(i,j)*E(i+1,j));
+
+        Px(i+1,j) = Px(i,j);
+        Py(i+1,j) = Py(i,j);
+        Pz(i+1,j) = Pz(i,j) - e*Efield*deltaT;
+
         eff_m(i+1,j) = eff_m(i,j);
+        P(i+1,j) = sqrt(Px(i+1,j)^2 + Py(i+1,j)^2 + Pz(i+1,j)^2);
+
+        %E(i+1,j) = (abs(P(i+1,j))^2)/(2*eff_m(i+1,j));
+        E(i+1,j) = abs((P(i+1,j)^2)/(2*eff_m(i+1,j)));
+        Eint(i+1,j) = energyToInt(E(i+1,j));
+
       else
-        % scattering before next timestep!
-        % check for scattering (update Enew)
-        %E_old = E(i,j);
+        scattered = 1;
+        remainingTime = deltaT;
+        % there may be multiple scattering events in a single timestep
+         while 1
 
-        [scatt_mech(i,j), valley(i+1,j), eff_m(i+1,j)] = getScattering(valley(i,j), Eint(i,j));
+            % scattering before next timestep!
+            % check for scattering (update Enew)
+            %E_old = E(i,j);
 
-        if (scatt_mech(i,j) ~= SELF) %self-scattering
-            [E(i+1,j), Eint(i+1,j)] = updateEnergy(scatt_mech(i,j), E(i,j), valley(i,j), valley(i+1,j));
-            theta(i,j) = getTheta(scatt_mech(i,j), E(i,j), E(i+1,j));
-            phi(i,j) = getPhi();
+            % momentum drift until time of scattering
+            Px(i,j) = Px(i,j);
+            Py(i,j) = Py(i,j);
+            Pz(i,j) = Pz(i,j) - e*Efield*tff(1,j);
+            P(i,j) = sqrt(Px(i,j)^2 + Py(i,j)^2 + Pz(i,j)^2);
 
-            % Update Momentum
-        	% p(new) = p(itime) - eE*tff
+            % energy right before scattering
+            E(i,j) = abs((P(i,j)^2)/(2*eff_m(i,j)));
+            Eint(i,j) = energyToInt(E(i,j));
 
-            [Px(i+1,j), Py(i+1,j), Pz(i+1,j)] = getP(Px(i,j), Py(i,j), Pz(i,j), P(i,j), theta(i,j), phi(i,j));
-            P(i+1,j) = P(i,j) - e*Efield*tff(1,j); % momentum after scattering
-            %P(i+1,j) = P(i,j) - Efield*tff(1,j); % momentum after scattering
-            Px(i+1,j) = P(i+1,j)*Px(i+1,j);
-            Py(i+1,j) = P(i+1,j)*Py(i+1,j); % TODO this???
-            Pz(i+1,j) = P(i+1,j)*Pz(i+1,j);
-        % come back with updated post scattering, P_as, E_as
-        end
+            % determine scattering mechanism
+            [scatt_mech(i,j), valley(i+1,j), eff_m(i+1,j)] = getScattering(valley(i,j), Eint(i,j));
+            % Only update angle of momentum if not self-scattering
+            if (scatt_mech(i,j) ~= SELF) % if not self-scattering
 
-        % Update Free-Flight Time
-        tff(1,j) = getTff(); % get a new free-flight time for particle j
+                % energy after scattering
+                [E(i+1,j), Eint(i+1,j)] = updateEnergy(scatt_mech(i,j), E(i,j), valley(i,j), valley(i+1,j));
 
-      end % if statement
+                % new angles (theta and phi)
+                theta(i,j) = getTheta(scatt_mech(i,j), E(i,j), E(i+1,j));
+                phi(i,j) = getPhi();
 
+                % Update Momentum
+                % momentum components x, y, and z
+                [Px(i+1,j), Py(i+1,j), Pz(i+1,j)] = getP(Px(i,j), Py(i,j), Pz(i,j), P(i,j), theta(i,j), phi(i,j));
+
+                % momentum after scattering
+                P(i+1,j) = sqrt(2*eff_m(i+1,j)*E(i+1,j));
+                %P(i+1,j) = sqrt(Px(i+1,j)^2 + Py(i+1,j)^2 + Pz(i+1,j)^2);
+                a1 = P(i+1,j);
+
+                % multiply x, y, and z components by momentum after scattering
+                % Do I do this? Or is that redundant?
+                Px(i+1,j) = abs(P(i+1,j))*Px(i+1,j);
+                Py(i+1,j) = abs(P(i+1,j))*Py(i+1,j);
+                Pz(i+1,j) = abs(P(i+1,j))*Pz(i+1,j);
+                P(i+1,j) = sqrt(Px(i+1,j)^2 + Py(i+1,j)^2 + Pz(i+1,j)^2);
+                a2 = P(i+1,j);
+
+           else %self-scattering
+                % Momentum angle doesn't change.
+                % Energy remains the same as right before scattering.
+                E(i+1,j) = E(i,j);
+                Eint(i+1,j) = Eint(i,j);
+
+                %P(i,j) = sqrt(2*eff_m(i,j)*E(i,j));
+                %P(i+1,j) = sqrt(2*eff_m(i+1,j)*E(i+1,j));
+                %P(i,j) = sqrt(Px(i,j)^2 + Py(i,j)^2 + Pz(i,j)^2);
+
+                Px(i+1,j) = Px(i,j);
+                Py(i+1,j) = Py(i,j);
+                Pz(i+1,j) = Pz(i,j);
+                P(i+1,j) = sqrt(Px(i+1,j)^2 + Py(i+1,j)^2 + Pz(i+1,j)^2);
+
+            end % if statement (self-scattering or not)
+
+            % time between the scattering and next timestep
+            remainingTime = remainingTime - tff(1,j);
+
+            % Update Free-Flight Time
+            tff(1,j) = getTff(); % get a new free-flight time for particle j
+
+            % will only continue if the free-flight time is larger than the
+            % time to the next timestep. Otherwise, perform scattering
+            % calculations again.
+            if (tff(1,j) > remainingTime)
+                break;
+            else
+                % set each value that's been incremented to the current
+                % timestep because we'll need them again.
+
+                E(i,j) = E(i+1,j);
+                Eint(i,j) = Eint(i+1,j);
+                valley(i,j) = valley(i+1,j);
+                eff_m(i,j) = eff_m(i+1,j);
+                Px(i,j) = Px(i+1,j);
+                Py(i,j) = Py(i+1,j);
+                Pz(i,j) = Pz(i+1,j);
+                P(i,j) = P(i+1,j);
+                %disp('double-dipping');
+            end
+        end % while loop
+
+        % update the momentum and energy from the time of scattering to
+        % the next timestep
+        Px(i+1,j) = Px(i+1,j);
+        Py(i+1,j) = Py(i+1,j);
+        Pz(i+1,j) = Pz(i+1,j) - e*Efield*remainingTime;
+        P(i+1,j) = sqrt(Px(i+1,j)^2 + Py(i+1,j)^2 + Pz(i+1,j)^2);
+
+        E(i+1,j) = abs((P(i+1,j)^2)/(2*eff_m(i+1,j)));
+        Eint(i+1,j) = energyToInt(E(i+1,j));
+
+      end % if statement (scattering before next timestep?)
+
+      % add energies to their respective valleys for averaging.
       switch valley(i,j)
         case 1
           E_tot_G = E_tot_G + E(i,j);
@@ -238,14 +350,30 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
           disp('E_tot Error');
       end
 
+      % check to see if momentum components are undefined.
+      if (isnan(Pz(i,j)) || isnan(Py(i,j)) || isnan(Px(i,j)))
+          % this shouldn't occur.
+          disp('Px, Py, or Pz is NaN');
+      end
+
+      E_final = E(i+1,j);
+
+      %vz(i,j) = -(E_final - E_initial)/(e*Efield*deltaT);
+       vz(i,j) = abs(Pz(i,j))/eff_m(i,j);
+       vx(i,j) = abs(Px(i,j))/eff_m(i,j);
+       vy(i,j) = abs(Py(i,j))/eff_m(i,j);
+      % add up for average values for each timestep.
       E_tot = E_tot + E(i,j);
+      P_tot = P_tot + P(i,j);
       Px_tot = Px_tot + Px(i,j);
       Py_tot = Py_tot + Py(i,j);
       Pz_tot = Pz_tot + Pz(i,j);
-      P_tot = P_tot + P(i,j);
       valley_tot = valley_tot + valley(i,j);
       eff_m_tot = eff_m_tot + eff_m(i,j);
-      v_tot = v_tot + Pz(i,j)/eff_m(i,j); %%%%
+      v_tot = v_tot + vz(i,j);
+      vx_tot = vx_tot + vx(i,j);
+      vy_tot = vy_tot + vy(i,j);
+      %v_tot = v_tot + Pz(i,j)/eff_m(i,j); %%%%
   end % j loop
 
   % get average E, Px, Py, Pz, and valley occupation(add up and divide by numOfParticles)
@@ -258,26 +386,26 @@ for i = 1:(numOfTimeSteps-1) % time-stepping loop
   E_avg_X(i,1) = (E_tot_X/valley_X(i,1));
   E_avg_L(i,1) = (E_tot_L/valley_L(i,1));
 
+  P_avg(i,1) = P_tot/numOfParticles;
   Px_avg(i,1) = (Px_tot/numOfParticles);
   Py_avg(i,1) = (Py_tot/numOfParticles);
   Pz_avg(i,1) = (Pz_tot/numOfParticles);
-  P_avg(i,1) = (P_tot/numOfParticles);
   valley_avg(i,1) = valley_tot/numOfParticles;
 
   %v_avg(i,1) = - v_tot/numOfParticles;
   %v_avg(i+1,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
-  %v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/mean(Efield*tff(1,:));
-  %v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/(e*Efield*deltaT);
+  %v_avg(i,1) = - mean(E(i+1,:) - E(i,:))/mean(e*Efield*tff(1,:));
   %v_avg(i+1,1) = - mean(E(i+1,:) - E(i,:))/mean(P(i,:));
-  %v_avg(i,1) = abs(Pz_avg(i,1)/eff_m_avg(i,1));
-
+   v_avg(i,1) = v_tot/numOfParticles;
+   vx_avg(i,1) = vx_tot/numOfParticles;
+   vy_avg(i,1) = vy_tot/numOfParticles;
 
   eff_m_avg(i,1) = eff_m_tot/numOfParticles;
 
-  v_avg(i,1) = real(P_avg(i,1)/eff_m_avg(i,1));
-  v_tot_E = v_tot_E + v_avg(i,1);
-  vx_avg(i,1) = real(Px_avg(i,1)/eff_m_avg(i,1));
-  vy_avg(i,1) = real(Py_avg(i,1)/eff_m_avg(i,1));
+  %v_avg(i,1) = abs(Pz_avg(i,1)/eff_m_avg(i,1));
+  %vz_avg(i,1) = abs(P
+  %vx_avg(i,1) = abs(Px_avg(i,1)/eff_m_avg(i,1));
+  %vy_avg(i,1) = abs(Py_avg(i,1)/eff_m_avg(i,1));
 
 end % i loop
 
@@ -290,9 +418,14 @@ E_avg(numOfTimeSteps,1) = NaN;
 E_avg_G(numOfTimeSteps,1) = NaN;
 E_avg_X(numOfTimeSteps,1) = NaN;
 E_avg_L(numOfTimeSteps,1) = NaN;
+v_avg(numOfTimeSteps,1) = NaN;
+vz_avg(numOfTimeSteps,1) = NaN;
 vx_avg(numOfTimeSteps,1) = NaN;
 vy_avg(numOfTimeSteps,1) = NaN;
-eff_m_avg(numOfTimeSteps,1) = NaN;
+Pz_avg(numOfTimeSteps,1) = NaN;
+Px_avg(numOfTimeSteps,1) = NaN;
+Py_avg(numOfTimeSteps,1) = NaN;
+
 % -----------------------
 % 2) Plot the time evolution of:
 %    a) The average electron velocity along the field direction
@@ -303,27 +436,38 @@ eff_m_avg(numOfTimeSteps,1) = NaN;
 % -----------------------
 
 % <v> = - deltaEk/(e*Efield*tff)
-%{
+
+%{ %ayyy
+
 % a) The average electron velocity along the field direction
 figure();
 hold on;
-plot(timeStep,v_avg(:,1));
+plot(timeStep,v_avg(:,1)/100);
 title('Average Velocity Over Time');
 xlabel('Time (s)');
 ylabel('Velocity (cm/s)');
 hold off;
+%{
+figure();
+hold on;
+plot(timeStep,Pz_avg(:,1));
+title('Average Pz');
+xlabel('Time (s)');
+ylabel('kgm/s');
+hold off;
+%}
 
 % b) Average electron kinetic energy (for each valley as well as the ensemble as a whole)
 figure();
 hold on;
-plot(timeStep,E_avg/e);
+plot(timeStep,E_avg);
 title('Average Ek Over Time');
-plot(timeStep,E_avg_G/e);
-plot(timeStep,E_avg_X/e);
-plot(timeStep,E_avg_L/e);
+plot(timeStep,E_avg_G);
+plot(timeStep,E_avg_X);
+plot(timeStep,E_avg_L);
 legend('Total Avg Ek', '\Gamma', 'X', 'L');
 xlabel('Time (s)');
-ylabel('E_k (eV)');
+ylabel('E_k (J)');
 hold off;
 
 % c) Population of each valley for the uniform electric field of 0.5, 1, 2, 5, 8, and 10 kV/cm
@@ -345,20 +489,22 @@ histogram(valley);
 title('Valley Occupation at end');
 hold off;
 %}
-%}
+
 % d) For the electric field of 5 kV/cm, plot the evolution of the x and y
 %    components of the electron velocity as well.
-if (Efield == 5)
+%if (Efield == 5)
+
   figure();
   hold on;
-  plot(timeStep,vx_avg(:,1));
-  plot(timeStep,vy_avg(:,1));
+  plot(timeStep,vx_avg(:,1)/100);
+  plot(timeStep,vy_avg(:,1)/100);
   title('X and Y Components of Avg Velocity');
   legend('v_x', 'v_y');
   xlabel('Time (s)');
   ylabel('Velocity (cm/s)');
   hold off;
-end
+
+%end
 
 
 
@@ -381,6 +527,8 @@ plot(timeStep,abs(Pz_avg));
 title('Pz Avg');
 hold off;
 %}
+
+%} %ayyy
 
 % ---------------------------
 % 3) From the time evolution of the drift velocity, kinetic energy in each valley, and valley
@@ -405,13 +553,13 @@ hold off;
 %    each quantity of interest over a few picoseconds once you are comfortably in the steady state.
 % ---------------------------
 
-v_avg_E(r,1) = v_tot_E/numOfParticles;
+v_Efield_avg(g,:) = v_avg(:,1)/100;
 
 
-end % EfkV
+end % g loop (vary Efield)
 
-figure();
-plot(EfkV,v_avg_E);
+
+disp('ready to plot!')
 
 
 
