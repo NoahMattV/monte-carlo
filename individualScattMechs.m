@@ -9,7 +9,7 @@ function out = individualScattMechs()
   close all;
   clc;
   scatteringMechs();
-  global e;
+  e = 1.602e-19;
   E = linspace(1e-255,2*e,1001); % 0 to 2*e Joules
 
   global GTot_G;
